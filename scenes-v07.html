@@ -1,0 +1,305 @@
+<!doctype html>
+<html lang="zh-CN">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover" />
+  <title>场景模式 v0.7</title>
+  <style>
+    * { box-sizing: border-box; }
+    html, body {
+      margin: 0;
+      width: 100%;
+      height: 100%;
+      overflow: hidden;
+      background: #0f0f12;
+      color: #f4f4f5;
+      font-family: -apple-system, BlinkMacSystemFont, "PingFang SC", "Microsoft YaHei", system-ui, sans-serif;
+    }
+    button, input { font: inherit; }
+    .hide { display: none !important; }
+    .screen {
+      width: 100vw;
+      height: 100dvh;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      padding: 22px;
+      background:
+        radial-gradient(circle at 30% 20%, #27272a 0, transparent 32%),
+        radial-gradient(circle at 80% 90%, #18181b 0, transparent 30%),
+        #0f0f12;
+    }
+    .card {
+      width: 100%;
+      max-width: 560px;
+      background: #18181b;
+      border: 1px solid #3f3f46;
+      border-radius: 30px;
+      overflow: hidden;
+      box-shadow: 0 24px 80px #0008;
+    }
+    .head { padding: 28px; background: #09090b; }
+    .head h1 { margin: 0; font-size: 28px; letter-spacing: .02em; }
+    .head p { color: #a1a1aa; line-height: 1.7; margin: 10px 0 0; }
+    .form { padding: 22px; display: grid; gap: 14px; }
+    label span { display: block; margin-bottom: 8px; color: #d4d4d8; font-weight: 800; font-size: 14px; }
+    input {
+      width: 100%;
+      border: 1px solid #3f3f46;
+      background: #09090b;
+      color: #f4f4f5;
+      border-radius: 18px;
+      padding: 13px 15px;
+      outline: 0;
+    }
+    .saved {
+      padding: 22px;
+      display: grid;
+      gap: 16px;
+    }
+    .saved-box {
+      border: 1px solid #3f3f46;
+      background: #09090b;
+      border-radius: 20px;
+      padding: 14px;
+      line-height: 1.7;
+      color: #d4d4d8;
+      word-break: break-word;
+    }
+    .entry-actions {
+      display: grid;
+      place-items: center;
+      gap: 14px;
+      padding-top: 6px;
+    }
+    .circle-btn {
+      width: 78px;
+      height: 78px;
+      border-radius: 999px;
+      border: 1px solid #f4f4f5;
+      background: #f4f4f5;
+      color: #09090b;
+      display: grid;
+      place-items: center;
+      font-size: 38px;
+      font-weight: 900;
+      cursor: pointer;
+      box-shadow: 0 20px 60px #0006;
+    }
+    .btn {
+      border: 1px solid #3f3f46;
+      background: #27272a;
+      color: #f4f4f5;
+      border-radius: 16px;
+      padding: 10px 14px;
+      font-weight: 850;
+      cursor: pointer;
+      white-space: nowrap;
+    }
+    .btn.primary { background: #f4f4f5; color: #09090b; border-color: #f4f4f5; }
+    .btn.danger { border-color: #7f1d1d; color: #fecaca; background: #450a0a; }
+    .row { display: flex; gap: 10px; flex-wrap: wrap; justify-content: center; }
+    .quiet { color: #a1a1aa; font-size: 13px; line-height: 1.5; text-align: center; }
+    .frame-wrap { width: 100vw; height: 100dvh; overflow: hidden; background: #0f0f12; }
+    iframe { width: 100%; height: 100%; border: 0; display: block; }
+    @media (max-width: 720px) {
+      .screen { align-items: stretch; padding: 14px; }
+      .card { margin: auto 0; }
+      .head { padding: 22px; }
+      .head h1 { font-size: 25px; }
+      .form, .saved { padding: 18px; }
+      .circle-btn { width: 74px; height: 74px; }
+    }
+  </style>
+</head>
+<body>
+  <section id="entry" class="screen">
+    <div class="card">
+      <div class="head">
+        <h1>场景模式</h1>
+        <p id="headText">连接信息会保存在本机。以后打开同一浏览器会自动带出。</p>
+      </div>
+
+      <div id="savedView" class="saved hide">
+        <div class="saved-box" id="savedInfo"></div>
+        <div class="entry-actions">
+          <button id="guideSaved" class="circle-btn" type="button">›</button>
+          <button id="directSaved" class="btn" type="button">直接进入场景</button>
+          <div class="row">
+            <button id="editConfig" class="btn" type="button">修改配置</button>
+            <button id="clearConfig" class="btn danger" type="button">清除配置</button>
+          </div>
+          <div class="quiet">圆形按钮进入配置生成流程。</div>
+        </div>
+      </div>
+
+      <form id="configForm" class="form">
+        <label><span>Endpoint</span><input id="endpoint" value="https://api.deepseek.com" /></label>
+        <label><span>API Key</span><input id="apiKey" type="password" placeholder="sk-..." /></label>
+        <label><span>Main Model</span><input id="model" value="deepseek-chat" /></label>
+        <label><span>Router Model</span><input id="routerModel" value="deepseek-chat" /></label>
+        <label><span>Deep Model</span><input id="deepModel" value="" /></label>
+        <div class="entry-actions">
+          <button id="guideBtn" class="circle-btn" type="button">›</button>
+          <button id="directBtn" class="btn" type="button">直接进入场景</button>
+          <div class="quiet">保存后下次无需重新输入。</div>
+        </div>
+      </form>
+    </div>
+  </section>
+
+  <section id="frameWrap" class="frame-wrap hide">
+    <iframe id="sceneFrame" src="about:blank"></iframe>
+  </section>
+
+  <script>
+    const STABLE_CONFIG_KEY = 'sports-bros-api-config';
+    const LEGACY_CONFIG_KEYS = [
+      'sports-bros-scene-config-v06',
+      'sports-bros-scene-config-v05',
+      'sports-bros-scene-config-v04',
+      'sports-bros-scene-config-v03',
+      'sports-bros-cfg-v063',
+      'sports-bros-cfg-v062',
+      'sports-bros-cfg-v060',
+      'sports-bros-cfg-v053'
+    ];
+
+    let config = null;
+    let editing = false;
+
+    function $(selector) { return document.querySelector(selector); }
+
+    function showEntry() {
+      $('#entry').classList.remove('hide');
+      $('#frameWrap').classList.add('hide');
+    }
+
+    function showFrame() {
+      $('#entry').classList.add('hide');
+      $('#frameWrap').classList.remove('hide');
+    }
+
+    function readJson(key) {
+      try { return JSON.parse(localStorage.getItem(key) || 'null'); } catch { return null; }
+    }
+
+    function writeAllConfig(cfg) {
+      localStorage.setItem(STABLE_CONFIG_KEY, JSON.stringify(cfg));
+      LEGACY_CONFIG_KEYS.forEach(key => localStorage.setItem(key, JSON.stringify(cfg)));
+    }
+
+    function migrateConfig() {
+      const stable = readJson(STABLE_CONFIG_KEY);
+      if (stable && stable.key) return stable;
+      for (const key of LEGACY_CONFIG_KEYS) {
+        const old = readJson(key);
+        if (old && old.key) {
+          writeAllConfig(old);
+          return old;
+        }
+      }
+      return null;
+    }
+
+    function applyToForm(cfg) {
+      $('#endpoint').value = cfg?.endpoint || 'https://api.deepseek.com';
+      $('#apiKey').value = cfg?.key || '';
+      $('#model').value = cfg?.model || 'deepseek-chat';
+      $('#routerModel').value = cfg?.routerModel || cfg?.model || 'deepseek-chat';
+      $('#deepModel').value = cfg?.deepModel || '';
+    }
+
+    function readFormConfig() {
+      const cfg = {
+        endpoint: $('#endpoint').value.trim(),
+        key: $('#apiKey').value.trim(),
+        model: $('#model').value.trim(),
+        routerModel: $('#routerModel').value.trim(),
+        deepModel: $('#deepModel').value.trim()
+      };
+      if (!cfg.key) {
+        alert('请先填写 API Key');
+        return null;
+      }
+      writeAllConfig(cfg);
+      config = cfg;
+      return cfg;
+    }
+
+    function maskKey(key) {
+      if (!key) return '';
+      if (key.length <= 10) return key.slice(0, 3) + '***';
+      return key.slice(0, 6) + '...' + key.slice(-4);
+    }
+
+    function render() {
+      if (config && !editing) {
+        $('#savedView').classList.remove('hide');
+        $('#configForm').classList.add('hide');
+        $('#savedInfo').innerHTML = [
+          `Endpoint：${escapeHtml(config.endpoint || '')}`,
+          `Main：${escapeHtml(config.model || '')}`,
+          `Router：${escapeHtml(config.routerModel || config.model || '')}`,
+          `Deep：${escapeHtml(config.deepModel || '未设置')}`,
+          `Key：${escapeHtml(maskKey(config.key || ''))}`
+        ].join('<br>');
+      } else {
+        $('#savedView').classList.add('hide');
+        $('#configForm').classList.remove('hide');
+        applyToForm(config);
+      }
+    }
+
+    function escapeHtml(value) {
+      return String(value || '')
+        .replaceAll('&', '&amp;')
+        .replaceAll('<', '&lt;')
+        .replaceAll('>', '&gt;')
+        .replaceAll('"', '&quot;');
+    }
+
+    function enterV06(mode) {
+      if (!config) {
+        const cfg = readFormConfig();
+        if (!cfg) return;
+      } else {
+        writeAllConfig(config);
+      }
+      showFrame();
+      const target = mode === 'direct'
+        ? './scenes-v04.html?v=07-direct-' + Date.now()
+        : './scenes-v06.html?v=07-guide-' + Date.now();
+      $('#sceneFrame').src = target;
+    }
+
+    function init() {
+      config = migrateConfig();
+      applyToForm(config);
+      render();
+
+      $('#guideBtn').onclick = () => {
+        const cfg = readFormConfig();
+        if (cfg) enterV06('guide');
+      };
+      $('#directBtn').onclick = () => {
+        const cfg = readFormConfig();
+        if (cfg) enterV06('direct');
+      };
+      $('#guideSaved').onclick = () => enterV06('guide');
+      $('#directSaved').onclick = () => enterV06('direct');
+      $('#editConfig').onclick = () => { editing = true; render(); };
+      $('#clearConfig').onclick = () => {
+        if (!confirm('清除本机保存的 API 配置？')) return;
+        localStorage.removeItem(STABLE_CONFIG_KEY);
+        LEGACY_CONFIG_KEYS.forEach(key => localStorage.removeItem(key));
+        config = null;
+        editing = true;
+        render();
+      };
+    }
+
+    init();
+  </script>
+</body>
+</html>
