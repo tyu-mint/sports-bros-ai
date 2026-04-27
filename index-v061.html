@@ -1,0 +1,87 @@
+<!doctype html>
+<html lang="zh-CN">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover" />
+  <title>今晚打不打球 v0.6.1</title>
+  <style>
+    html, body {
+      margin: 0;
+      width: 100%;
+      height: 100%;
+      overflow: hidden;
+      background: #f4f4f5;
+    }
+
+    iframe {
+      width: 100vw;
+      height: 100dvh;
+      border: 0;
+      display: block;
+    }
+  </style>
+</head>
+<body>
+  <iframe id="app" src="./index-v060.html?v=061-inner"></iframe>
+
+  <script>
+    const frame = document.getElementById('app');
+
+    function patchApp() {
+      const app = frame.contentWindow;
+      if (!app) return;
+
+      app.stripTimestampPrefix = function stripTimestampPrefix(line) {
+        return String(line || '')
+          .replace(/^\s*\[\d{4}-\d{2}-\d{2}\s+\d{2}:\d{2}\]\s*/, '')
+          .trim();
+      };
+
+      app.parseGroupReply = function parseGroupReply(raw) {
+        const parsed = [];
+        const agents = app.agents || [];
+
+        String(raw || '').split(/\n+/).forEach(line => {
+          const cleanLine = app.stripTimestampPrefix(line);
+          const match = cleanLine.match(/^([^：:]{1,8})[：:](.+)$/);
+          if (match && agents.some(agent => agent.name === match[1].trim())) {
+            parsed.push({
+              sender: match[1].trim(),
+              content: match[2].trim()
+            });
+          }
+        });
+
+        return parsed.length ? parsed.slice(0, 5) : [{
+          sender: '周野',
+          content: String(raw || '')
+            .replace(/^\s*\[\d{4}-\d{2}-\d{2}\s+\d{2}:\d{2}\]\s*/gm, '')
+            .slice(0, 220)
+        }];
+      };
+
+      const oldGroupPrompt = app.groupPrompt;
+      app.groupPrompt = function groupPromptPatched() {
+        const base = oldGroupPrompt ? oldGroupPrompt() : '';
+        return base + '\n\n输出硬性要求：\n- 只输出“角色名：消息内容”。\n- 不要输出时间戳。\n- 不要模仿上下文里的 [YYYY-MM-DD HH:mm]。\n- 不要把多个人的回复合并成一条。\n- 示例：周野：晚上出来不？别窝着。';
+      };
+
+      const oldTimelineMessages = app.timelineMessages;
+      app.timelineMessages = function timelineMessagesPatched(id) {
+        const messages = oldTimelineMessages ? oldTimelineMessages(id) : [];
+        return messages.map(message => ({
+          ...message,
+          content: String(message.content || '')
+            .replace(/^\[(\d{4}-\d{2}-\d{2}\s+\d{2}:\d{2})\]\s*/, '时间 $1 ｜ ')
+        }));
+      };
+    }
+
+    frame.addEventListener('load', () => {
+      patchApp();
+      setTimeout(patchApp, 300);
+      setTimeout(patchApp, 1000);
+    });
+  </script>
+</body>
+</html>
