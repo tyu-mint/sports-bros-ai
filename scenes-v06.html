@@ -1,0 +1,932 @@
+<!doctype html>
+<html lang="zh-CN">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover" />
+  <title>场景模式 v0.6</title>
+  <style>
+    * { box-sizing: border-box; }
+
+    html, body {
+      margin: 0;
+      width: 100%;
+      height: 100%;
+      overflow: hidden;
+      background: #0f0f12;
+      color: #f4f4f5;
+      font-family: -apple-system, BlinkMacSystemFont, "PingFang SC", "Microsoft YaHei", system-ui, sans-serif;
+    }
+
+    button, input, textarea, select { font: inherit; }
+    .hide { display: none !important; }
+
+    .screen {
+      width: 100vw;
+      height: 100dvh;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      padding: 22px;
+      background:
+        radial-gradient(circle at 30% 20%, #27272a 0, transparent 32%),
+        radial-gradient(circle at 80% 90%, #18181b 0, transparent 30%),
+        #0f0f12;
+    }
+
+    .setup-card {
+      width: 100%;
+      max-width: 580px;
+      background: #18181b;
+      border: 1px solid #3f3f46;
+      border-radius: 30px;
+      overflow: hidden;
+      box-shadow: 0 24px 80px #0008;
+    }
+
+    .setup-head {
+      padding: 28px;
+      background: #09090b;
+    }
+
+    .setup-head h1 {
+      margin: 0;
+      font-size: 28px;
+      letter-spacing: .02em;
+    }
+
+    .setup-head p {
+      color: #a1a1aa;
+      line-height: 1.7;
+      margin: 10px 0 0;
+    }
+
+    .form {
+      padding: 22px;
+      display: grid;
+      gap: 14px;
+    }
+
+    label span {
+      display: block;
+      margin-bottom: 8px;
+      color: #d4d4d8;
+      font-weight: 800;
+      font-size: 14px;
+    }
+
+    input, textarea, select {
+      width: 100%;
+      border: 1px solid #3f3f46;
+      background: #09090b;
+      color: #f4f4f5;
+      border-radius: 18px;
+      padding: 13px 15px;
+      outline: 0;
+    }
+
+    textarea { resize: vertical; min-height: 92px; }
+
+    .entry-actions {
+      display: grid;
+      place-items: center;
+      gap: 14px;
+      padding-top: 6px;
+    }
+
+    .circle-btn {
+      width: 78px;
+      height: 78px;
+      border-radius: 999px;
+      border: 1px solid #f4f4f5;
+      background: #f4f4f5;
+      color: #09090b;
+      display: grid;
+      place-items: center;
+      font-size: 38px;
+      font-weight: 900;
+      cursor: pointer;
+      box-shadow: 0 20px 60px #0006;
+    }
+
+    .circle-btn:active { transform: scale(.97); }
+
+    .btn {
+      border: 1px solid #3f3f46;
+      background: #27272a;
+      color: #f4f4f5;
+      border-radius: 16px;
+      padding: 10px 14px;
+      font-weight: 850;
+      cursor: pointer;
+      white-space: nowrap;
+    }
+
+    .btn.primary {
+      background: #f4f4f5;
+      color: #09090b;
+      border-color: #f4f4f5;
+    }
+
+    .btn.ghost {
+      background: transparent;
+    }
+
+    .quiet {
+      color: #a1a1aa;
+      font-size: 13px;
+      line-height: 1.5;
+    }
+
+    .guide {
+      width: 100vw;
+      height: 100dvh;
+      display: grid;
+      grid-template-rows: auto 1fr auto;
+      background:
+        radial-gradient(circle at 50% 20%, #27272a 0, transparent 30%),
+        #0f0f12;
+    }
+
+    .guide-top {
+      padding: 14px;
+      padding-top: calc(14px + env(safe-area-inset-top));
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      gap: 10px;
+      border-bottom: 1px solid #27272a;
+      background: #0f0f12cc;
+    }
+
+    .guide-title {
+      font-weight: 900;
+      letter-spacing: .02em;
+    }
+
+    .guide-main {
+      overflow: auto;
+      padding: 22px;
+      display: flex;
+      justify-content: center;
+    }
+
+    .guide-box {
+      width: 100%;
+      max-width: 840px;
+      display: grid;
+      gap: 18px;
+      align-content: center;
+      min-height: 100%;
+    }
+
+    .guide-voice {
+      text-align: center;
+      color: #e4e4e7;
+      font-size: 18px;
+      line-height: 1.75;
+      white-space: pre-wrap;
+    }
+
+    .guide-input-row {
+      display: flex;
+      gap: 10px;
+      align-items: center;
+    }
+
+    .guide-input {
+      min-height: 60px;
+      border-radius: 999px;
+      padding: 0 22px;
+      font-size: 18px;
+      text-align: center;
+    }
+
+    .send-btn {
+      width: 58px;
+      height: 58px;
+      min-width: 58px;
+      border-radius: 999px;
+      border: 1px solid #f4f4f5;
+      background: #f4f4f5;
+      color: #09090b;
+      font-size: 28px;
+      font-weight: 900;
+      cursor: pointer;
+    }
+
+    .config-card {
+      border: 1px solid #3f3f46;
+      background: #18181b;
+      border-radius: 28px;
+      padding: 18px;
+      box-shadow: 0 20px 60px #0004;
+      display: grid;
+      gap: 14px;
+    }
+
+    .config-head {
+      display: flex;
+      align-items: flex-start;
+      justify-content: space-between;
+      gap: 12px;
+      border-bottom: 1px solid #27272a;
+      padding-bottom: 12px;
+    }
+
+    .config-head h2 {
+      margin: 0;
+      font-size: 22px;
+    }
+
+    .config-head p {
+      margin: 6px 0 0;
+      color: #a1a1aa;
+      line-height: 1.5;
+      font-size: 14px;
+    }
+
+    .config-grid {
+      display: grid;
+      grid-template-columns: repeat(2, minmax(0, 1fr));
+      gap: 10px;
+    }
+
+    .config-item {
+      border: 1px solid #3f3f46;
+      background: #09090b;
+      border-radius: 18px;
+      padding: 12px;
+      min-height: 76px;
+      cursor: pointer;
+    }
+
+    .config-item.wide { grid-column: 1 / -1; }
+    .config-item:hover { border-color: #71717a; }
+
+    .item-label {
+      color: #a1a1aa;
+      font-size: 12px;
+      font-weight: 850;
+      margin-bottom: 7px;
+    }
+
+    .item-value {
+      color: #f4f4f5;
+      line-height: 1.55;
+      white-space: pre-wrap;
+      overflow-wrap: anywhere;
+    }
+
+    .tags {
+      display: flex;
+      gap: 7px;
+      flex-wrap: wrap;
+    }
+
+    .tag {
+      display: inline-flex;
+      align-items: center;
+      border: 1px solid #3f3f46;
+      border-radius: 999px;
+      padding: 5px 9px;
+      background: #18181b;
+      font-size: 12px;
+      color: #e4e4e7;
+    }
+
+    .config-actions {
+      display: flex;
+      gap: 10px;
+      justify-content: center;
+      flex-wrap: wrap;
+      padding-top: 4px;
+    }
+
+    .guide-footer {
+      padding: 14px;
+      padding-bottom: calc(14px + env(safe-area-inset-bottom));
+      display: flex;
+      justify-content: center;
+      gap: 10px;
+      border-top: 1px solid #27272a;
+      background: #0f0f12cc;
+    }
+
+    .frame-wrap {
+      width: 100vw;
+      height: 100dvh;
+      overflow: hidden;
+      background: #0f0f12;
+    }
+
+    iframe {
+      width: 100%;
+      height: 100%;
+      border: 0;
+      display: block;
+    }
+
+    .loading { opacity: .7; pointer-events: none; }
+
+    .mask {
+      position: fixed;
+      inset: 0;
+      background: #0008;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      padding: 14px;
+      z-index: 20;
+    }
+
+    .modal {
+      width: 100%;
+      max-width: 560px;
+      background: #18181b;
+      border: 1px solid #3f3f46;
+      border-radius: 24px;
+      padding: 16px;
+      max-height: 88dvh;
+      overflow: auto;
+      display: grid;
+      gap: 12px;
+    }
+
+    .modal h3 { margin: 0; }
+    .modal-actions {
+      display: flex;
+      justify-content: flex-end;
+      gap: 8px;
+      flex-wrap: wrap;
+    }
+
+    .option-grid {
+      display: grid;
+      gap: 8px;
+    }
+
+    .option-grid label {
+      display: flex;
+      gap: 8px;
+      align-items: center;
+      border: 1px solid #3f3f46;
+      border-radius: 14px;
+      padding: 10px;
+      background: #09090b;
+    }
+
+    .option-grid input {
+      width: auto;
+    }
+
+    @media (max-width: 720px) {
+      .screen { align-items: stretch; padding: 14px; }
+      .setup-card { margin: auto 0; }
+      .setup-head { padding: 22px; }
+      .setup-head h1 { font-size: 25px; }
+      .form { padding: 18px; }
+      .circle-btn { width: 74px; height: 74px; }
+      .guide-main { padding: 14px; }
+      .guide-input-row { gap: 8px; }
+      .guide-input { font-size: 17px; min-height: 58px; }
+      .send-btn { width: 56px; height: 56px; min-width: 56px; }
+      .guide-voice { font-size: 17px; }
+      .config-grid { grid-template-columns: 1fr; }
+      .config-head { display: grid; }
+      .guide-footer { flex-wrap: wrap; }
+    }
+  </style>
+</head>
+<body>
+  <section id="setup" class="screen">
+    <div class="setup-card">
+      <div class="setup-head">
+        <h1>场景模式</h1>
+        <p>先连接模型。您可以让入口为您生成本次配置，也可以直接进入默认场景。</p>
+      </div>
+      <form id="setupForm" class="form">
+        <label><span>Endpoint</span><input id="endpoint" value="https://api.deepseek.com" /></label>
+        <label><span>API Key</span><input id="apiKey" type="password" placeholder="sk-..." /></label>
+        <label><span>Main Model</span><input id="model" value="deepseek-chat" /></label>
+        <label><span>Router Model</span><input id="routerModel" value="deepseek-chat" /></label>
+        <label><span>Deep Model</span><input id="deepModel" value="" /></label>
+        <div class="entry-actions">
+          <button id="guideBtn" class="circle-btn" type="button">›</button>
+          <button id="directBtn" class="btn" type="button">直接进入场景</button>
+          <div class="quiet">圆形按钮会进入配置生成流程。</div>
+        </div>
+      </form>
+    </div>
+  </section>
+
+  <section id="guide" class="guide hide">
+    <header class="guide-top">
+      <div>
+        <div class="guide-title">入口配置</div>
+        <div class="quiet">请描述您今晚想进入的状态。</div>
+      </div>
+      <button id="backSetup" class="btn ghost" type="button">返回</button>
+    </header>
+
+    <main class="guide-main">
+      <div class="guide-box">
+        <div id="guideVoice" class="guide-voice">请描述您今晚想进入的状态。</div>
+        <form id="guideForm" class="guide-input-row">
+          <input id="guideInput" class="guide-input" autocomplete="off" />
+          <button id="guideSend" class="send-btn">›</button>
+        </form>
+        <div id="configCard" class="config-card hide"></div>
+      </div>
+    </main>
+
+    <footer class="guide-footer">
+      <button id="directFromGuide" class="btn" type="button">直接进入场景</button>
+    </footer>
+  </section>
+
+  <section id="frameWrap" class="frame-wrap hide">
+    <iframe id="sceneFrame" src="about:blank"></iframe>
+  </section>
+
+  <div id="editMask" class="mask hide">
+    <div class="modal">
+      <h3 id="editTitle"></h3>
+      <div id="editBody"></div>
+      <div class="modal-actions">
+        <button id="editCancel" class="btn" type="button">取消</button>
+        <button id="editSave" class="btn primary" type="button">保存</button>
+      </div>
+    </div>
+  </div>
+
+  <script>
+    const CONFIG_KEY = 'sports-bros-scene-config-v06';
+    const V04_CONFIG_KEY = 'sports-bros-scene-config-v04';
+    const V04_STATE_KEY = 'sports-bros-scene-state-v04';
+    const CUSTOM_KEY = 'sports-bros-scene-custom-v06';
+
+    const agentNames = {
+      zhouye: '周野',
+      chenxiao: '陈骁',
+      linchuan: '林川',
+      zhaokai: '赵恺',
+      ahang: '阿航'
+    };
+
+    const modeLabels = {
+      safe: '普通',
+      coarse: '粗口',
+      suggestive: '暗示',
+      nsfw: '成人'
+    };
+
+    const intensityLabels = {
+      soft: '低',
+      medium: '中',
+      explicit: '高'
+    };
+
+    const toneLabels = {
+      brother: '兄弟',
+      rough_bro: '粗粝兄弟',
+      teasing: '嘴欠调侃',
+      direct: '直接推进'
+    };
+
+    let config = null;
+    let currentPlan = null;
+    let editingField = null;
+
+    function $(selector) {
+      return document.querySelector(selector);
+    }
+
+    function show(id) {
+      ['setup', 'guide', 'frameWrap'].forEach(name => $('#' + name).classList.toggle('hide', name !== id));
+    }
+
+    function escapeHtml(value) {
+      return String(value || '')
+        .replaceAll('&', '&amp;')
+        .replaceAll('<', '&lt;')
+        .replaceAll('>', '&gt;')
+        .replaceAll('"', '&quot;');
+    }
+
+    function normalizeEndpoint(endpoint) {
+      const trimmed = endpoint.trim().replace(/\/$/, '');
+      if (trimmed.endsWith('/chat/completions')) return trimmed;
+      if (trimmed.endsWith('/v1')) return `${trimmed}/chat/completions`;
+      return `${trimmed}/v1/chat/completions`;
+    }
+
+    function readConfigFromForm() {
+      config = {
+        endpoint: $('#endpoint').value.trim(),
+        key: $('#apiKey').value.trim(),
+        model: $('#model').value.trim(),
+        routerModel: $('#routerModel').value.trim(),
+        deepModel: $('#deepModel').value.trim()
+      };
+      localStorage.setItem(CONFIG_KEY, JSON.stringify(config));
+      localStorage.setItem(V04_CONFIG_KEY, JSON.stringify(config));
+      return config;
+    }
+
+    function hydrateConfig() {
+      try {
+        config = JSON.parse(localStorage.getItem(CONFIG_KEY) || localStorage.getItem(V04_CONFIG_KEY) || 'null');
+        if (config) {
+          $('#endpoint').value = config.endpoint || 'https://api.deepseek.com';
+          $('#apiKey').value = config.key || '';
+          $('#model').value = config.model || 'deepseek-chat';
+          $('#routerModel').value = config.routerModel || config.model || 'deepseek-chat';
+          $('#deepModel').value = config.deepModel || '';
+        }
+      } catch {}
+    }
+
+    async function callGuide(messages, temperature = 0.7) {
+      const response = await fetch(normalizeEndpoint(config.endpoint), {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          Authorization: `Bearer ${config.key}`
+        },
+        body: JSON.stringify({
+          model: config.model,
+          messages,
+          temperature,
+          stream: false
+        })
+      });
+      const text = await response.text();
+      let data = {};
+      try { data = JSON.parse(text); } catch {}
+      if (!response.ok) throw new Error((data.error && data.error.message) || text || `HTTP ${response.status}`);
+      return data.choices[0].message.content.trim();
+    }
+
+    function guideSystemPrompt() {
+      return `你是场景入口的高级向导 Agent。
+你的语气平淡、礼貌、稳定，必须使用“您”称呼用户。
+你像一个私人服务人员，负责理解用户想要的体验，并生成本次场景配置。
+表达克制，不撒娇，不卖萌，不热情过度，不使用乙游式亲密口吻。
+你只做确认、配置和开启，不直接扮演体育生，不进入具体 RP。
+
+只输出 JSON，不要 Markdown，不要代码块。
+JSON 字段：
+{
+  "reply": "服务型确认语，1到3句。必须使用您。",
+  "title": "短标题，2到8个字",
+  "scene": "场景名",
+  "mode": "safe|coarse|suggestive|nsfw",
+  "intensity": "soft|medium|explicit",
+  "relationshipTone": "brother|rough_bro|teasing|direct",
+  "atmosphere": ["标签1", "标签2", "标签3"],
+  "participants": ["zhouye", "chenxiao", "linchuan", "zhaokai", "ahang"],
+  "intro": "进入场景时显示的一段短描写，80到180字",
+  "scenePrompt": "给 Scene Agent 的补充系统提示，说明氛围、节奏、角色表现、边界。",
+  "agentOverrides": {
+    "zhouye": "本场对周野的行为倾向",
+    "chenxiao": "本场对陈骁的行为倾向",
+    "linchuan": "本场对林川的行为倾向",
+    "zhaokai": "本场对赵恺的行为倾向",
+    "ahang": "本场对阿航的行为倾向"
+  },
+  "quick": ["(动作)快捷行为1", "(动作)快捷行为2", "(动作)快捷行为3", "(动作)快捷行为4"],
+  "boundaries": ["边界1", "边界2", "边界3"]
+}
+
+规则：
+- 所有角色均为18岁成年人。
+- 用户主动表达成人向需求时，可以生成 mode=nsfw 和 intensity=explicit。
+- 维持直男体育生兄弟关系基调，不乙游，不霸总。
+- boundaries 必须包含成年设定、用户可随时降级/退出、保持关系基调。
+- quick 必须使用英文半角括号动作格式，例如：(坐到床边)问他们今晚还出不出去。
+- 不要出现“定制梦境”四个字。`;
+    }
+
+    function safeJsonParse(text) {
+      const cleaned = String(text || '').replace(/^```json/i, '').replace(/```$/i, '').trim();
+      try { return JSON.parse(cleaned); } catch {}
+      const match = cleaned.match(/\{[\s\S]*\}/);
+      if (match) return JSON.parse(match[0]);
+      throw new Error('向导返回格式不对');
+    }
+
+    function normalizePlan(plan, userText) {
+      const fallback = fallbackPlan(userText);
+      const participants = Array.isArray(plan.participants) ? plan.participants.filter(id => agentNames[id]) : fallback.participants;
+      return {
+        reply: plan.reply || fallback.reply,
+        title: plan.title || plan.scene || fallback.title,
+        scene: plan.scene || plan.title || fallback.scene,
+        mode: ['safe', 'coarse', 'suggestive', 'nsfw'].includes(plan.mode) ? plan.mode : fallback.mode,
+        intensity: ['soft', 'medium', 'explicit'].includes(plan.intensity) ? plan.intensity : fallback.intensity,
+        relationshipTone: ['brother', 'rough_bro', 'teasing', 'direct'].includes(plan.relationshipTone) ? plan.relationshipTone : fallback.relationshipTone,
+        atmosphere: Array.isArray(plan.atmosphere) && plan.atmosphere.length ? plan.atmosphere.slice(0, 8) : fallback.atmosphere,
+        participants: participants.length ? participants : fallback.participants,
+        intro: plan.intro || fallback.intro,
+        scenePrompt: plan.scenePrompt || plan.systemPrompt || fallback.scenePrompt,
+        agentOverrides: { ...fallback.agentOverrides, ...(plan.agentOverrides || {}) },
+        quick: Array.isArray(plan.quick) && plan.quick.length ? plan.quick.slice(0, 5).map(ensureActionFormat) : fallback.quick,
+        boundaries: Array.isArray(plan.boundaries) && plan.boundaries.length ? plan.boundaries.slice(0, 8) : fallback.boundaries
+      };
+    }
+
+    function ensureActionFormat(text) {
+      const trimmed = String(text || '').trim();
+      if (/^\(.+?\)/.test(trimmed)) return trimmed;
+      if (/^（.+?）/.test(trimmed)) return trimmed.replace(/^（(.+?)）/, '($1)');
+      return `(看过去)${trimmed}`;
+    }
+
+    function fallbackPlan(userText) {
+      return {
+        reply: '已了解。我会为您安排一个夜里的宿舍场景，节奏更直接，角色会保持兄弟关系里的粗粝感。请您确认以下配置。',
+        title: '夜里宿舍',
+        scene: '宿舍',
+        mode: /黄|成人|nsfw|下流|直接|炒菜|色色|性/.test(userText) ? 'nsfw' : 'coarse',
+        intensity: /黄|成人|nsfw|下流|直接|炒菜|色色|性/.test(userText) ? 'explicit' : 'medium',
+        relationshipTone: 'rough_bro',
+        atmosphere: ['夜晚', '直接', '粗粝', '低灯光'],
+        participants: ['zhouye', 'chenxiao', 'linchuan', 'zhaokai', 'ahang'],
+        intro: '宿舍灯光压得很低，窗外的声音被隔在门外。几个人都在，周野靠着椅背看过来，陈骁嘴角带着点欠，林川安静地坐在床边，赵恺把水杯推近，阿航趴在椅背上等您开口。',
+        scenePrompt: `用户刚才说：${userText}\n本场氛围：夜晚、直接、粗粝、低灯光。保持直男体育生兄弟关系基调。角色可以更主动，但不乙游，不霸总。`,
+        agentOverrides: {
+          zhouye: '更主动，负责把节奏往前推。',
+          chenxiao: '嘴欠，负责挑衅、起哄和打破安静。',
+          linchuan: '话少，动作直接，关心不解释。',
+          zhaokai: '稳定，负责压住失控感和提醒边界。',
+          ahang: '热闹，负责让气氛更松一点。'
+        },
+        quick: ['(坐到床边)看他们在干什么', '(靠着门)让他们别装', '(拿起水瓶)问今晚谁先来', '(看向周野)让他安排'],
+        boundaries: ['所有角色均为18岁成年人', '保持直男体育生兄弟关系基调', '您可以随时降级或退出', '不强迫、不失控、不违背用户边界']
+      };
+    }
+
+    async function buildPlan(userText) {
+      const raw = await callGuide([{ role: 'system', content: guideSystemPrompt() }, { role: 'user', content: userText }], 0.68);
+      return normalizePlan(safeJsonParse(raw), userText);
+    }
+
+    function renderPlan(plan) {
+      currentPlan = plan;
+      localStorage.setItem(CUSTOM_KEY, JSON.stringify(plan));
+      $('#guideVoice').textContent = plan.reply || '配置已生成。请您确认以下内容。';
+      $('#configCard').classList.remove('hide');
+      $('#configCard').innerHTML = `
+        <div class="config-head">
+          <div>
+            <h2>配置已生成</h2>
+            <p>请您确认以下内容。您可以点击任意一项进行修改，确认后我会为您开启。</p>
+          </div>
+          <button class="btn primary" type="button" data-action="enter">进入</button>
+        </div>
+        <div class="config-grid">
+          ${item('title', '标题', plan.title)}
+          ${item('scene', '场景', plan.scene)}
+          ${item('mode', '内容模式', modeLabels[plan.mode] || plan.mode)}
+          ${item('intensity', '强度', intensityLabels[plan.intensity] || plan.intensity)}
+          ${item('relationshipTone', '关系基调', toneLabels[plan.relationshipTone] || plan.relationshipTone)}
+          ${item('participants', '参与角色', plan.participants.map(id => agentNames[id]).join('、'))}
+          ${item('atmosphere', '氛围标签', tags(plan.atmosphere), true)}
+          ${item('intro', '开场描写', plan.intro, true)}
+          ${item('scenePrompt', '场景规则', plan.scenePrompt, true)}
+          ${item('agentOverrides', '角色倾向', Object.entries(plan.agentOverrides || {}).map(([id, value]) => `${agentNames[id] || id}：${value}`).join('\n'), true)}
+          ${item('quick', '快捷行为', plan.quick.join('\n'), true)}
+          ${item('boundaries', '边界', plan.boundaries.join('\n'), true)}
+        </div>
+        <div class="config-actions">
+          <button class="btn" type="button" data-action="regenerate">重新生成</button>
+          <button class="btn primary" type="button" data-action="enter">进入</button>
+        </div>
+      `;
+      document.querySelectorAll('[data-field]').forEach(el => el.onclick = () => openEditor(el.dataset.field));
+      document.querySelectorAll('[data-action="enter"]').forEach(el => el.onclick = () => enterScene(currentPlan));
+      document.querySelector('[data-action="regenerate"]').onclick = () => regenerateFromCurrent();
+    }
+
+    function item(field, label, value, wide = false) {
+      return `<div class="config-item ${wide ? 'wide' : ''}" data-field="${field}"><div class="item-label">${label}</div><div class="item-value">${value}</div></div>`;
+    }
+
+    function tags(values) {
+      return `<div class="tags">${values.map(value => `<span class="tag">${escapeHtml(value)}</span>`).join('')}</div>`;
+    }
+
+    function openEditor(field) {
+      editingField = field;
+      const plan = currentPlan;
+      const titleMap = {
+        title: '修改标题', scene: '修改场景', mode: '修改内容模式', intensity: '修改强度', relationshipTone: '修改关系基调', participants: '修改参与角色', atmosphere: '修改氛围标签', intro: '修改开场描写', scenePrompt: '修改场景规则', agentOverrides: '修改角色倾向', quick: '修改快捷行为', boundaries: '修改边界'
+      };
+      $('#editTitle').textContent = titleMap[field] || '修改配置';
+      $('#editBody').innerHTML = editorHtml(field, plan);
+      $('#editMask').classList.remove('hide');
+    }
+
+    function editorHtml(field, plan) {
+      if (field === 'mode') return radioEditor('editValue', plan.mode, modeLabels);
+      if (field === 'intensity') return radioEditor('editValue', plan.intensity, intensityLabels);
+      if (field === 'relationshipTone') return radioEditor('editValue', plan.relationshipTone, toneLabels);
+      if (field === 'participants') return checkboxEditor('editValue', plan.participants, agentNames);
+      if (field === 'agentOverrides') return `<textarea id="editValue">${escapeHtml(Object.entries(plan.agentOverrides || {}).map(([id, value]) => `${id}: ${value}`).join('\n'))}</textarea><div class="quiet">每行格式：zhouye: 行为倾向</div>`;
+      if (['atmosphere', 'quick', 'boundaries'].includes(field)) return `<textarea id="editValue">${escapeHtml((plan[field] || []).join('\n'))}</textarea><div class="quiet">每行一项。</div>`;
+      return `<textarea id="editValue">${escapeHtml(plan[field] || '')}</textarea>`;
+    }
+
+    function radioEditor(name, selected, options) {
+      return `<div class="option-grid">${Object.entries(options).map(([value, label]) => `<label><input type="radio" name="${name}" value="${value}" ${value === selected ? 'checked' : ''}> ${label}</label>`).join('')}</div>`;
+    }
+
+    function checkboxEditor(name, selected, options) {
+      return `<div class="option-grid">${Object.entries(options).map(([value, label]) => `<label><input type="checkbox" name="${name}" value="${value}" ${selected.includes(value) ? 'checked' : ''}> ${label}</label>`).join('')}</div>`;
+    }
+
+    function saveEditor() {
+      if (!editingField || !currentPlan) return;
+      const field = editingField;
+      if (['mode', 'intensity', 'relationshipTone'].includes(field)) {
+        const checked = document.querySelector('input[name="editValue"]:checked');
+        if (checked) currentPlan[field] = checked.value;
+      } else if (field === 'participants') {
+        currentPlan.participants = Array.from(document.querySelectorAll('input[name="editValue"]:checked')).map(el => el.value);
+      } else if (field === 'agentOverrides') {
+        const lines = $('#editValue').value.split(/\n+/).map(line => line.trim()).filter(Boolean);
+        const obj = {};
+        lines.forEach(line => {
+          const match = line.match(/^([^:：]+)[:：](.+)$/);
+          if (match) obj[match[1].trim()] = match[2].trim();
+        });
+        currentPlan.agentOverrides = obj;
+      } else if (['atmosphere', 'quick', 'boundaries'].includes(field)) {
+        currentPlan[field] = $('#editValue').value.split(/\n+/).map(line => line.trim()).filter(Boolean);
+        if (field === 'quick') currentPlan.quick = currentPlan.quick.map(ensureActionFormat);
+      } else {
+        currentPlan[field] = $('#editValue').value.trim();
+      }
+      $('#editMask').classList.add('hide');
+      localStorage.setItem(CUSTOM_KEY, JSON.stringify(currentPlan));
+      renderPlan(currentPlan);
+    }
+
+    async function regenerateFromCurrent() {
+      const basis = currentPlan ? JSON.stringify(currentPlan) : $('#guideInput').value.trim();
+      $('#guideForm').classList.add('loading');
+      $('#guideVoice').textContent = '正在重新生成配置。';
+      try {
+        const plan = await buildPlan(`请基于以下内容重新生成一版配置：${basis}`);
+        renderPlan(plan);
+      } catch (error) {
+        $('#guideVoice').textContent = '重新生成失败。当前配置仍可继续编辑或进入。';
+      }
+      $('#guideForm').classList.remove('loading');
+    }
+
+    function baseStateForV04(plan) {
+      const now = Date.now();
+      return {
+        scene: plan ? plan.scene : '宿舍',
+        sceneLog: plan ? [{ role: 'scene', text: plan.intro }] : [],
+        quick: plan ? plan.quick : ['(起身)看看你在干什么？', '(靠在椅背上)说今天累死了', '(拿起手机)问他们要不要吃夜宵', '(看向林川)让他陪你下楼走走'],
+        prefs: { name: '我', avatar: '我', avatarUrl: '', edit: false, remarks: {}, nsfwGuard: true, autoNSFW: true, proactive: true, notifications: false, deepMode: 'auto' },
+        mode: plan ? plan.mode : 'safe',
+        lastActiveAt: now,
+        lastProactiveAt: 0,
+        im: {
+          group: [
+            { id: 'g1', role: 'assistant', sender: '周野', content: '进来了？那别光站着。', ts: now },
+            { id: 'g2', role: 'assistant', sender: '陈骁', content: '哟，终于来了。', ts: now },
+            { id: 'g3', role: 'assistant', sender: '阿航', content: '你先说，今天想去哪儿。', ts: now }
+          ],
+          zhouye: [{ id: 'z1', role: 'assistant', sender: '周野', content: '有事直接说。', ts: now }],
+          chenxiao: [{ id: 'c1', role: 'assistant', sender: '陈骁', content: '咋了，又找我唠？', ts: now }],
+          linchuan: [{ id: 'l1', role: 'assistant', sender: '林川', content: '嗯，我在。', ts: now }],
+          zhaokai: [{ id: 'k1', role: 'assistant', sender: '赵恺', content: '先问一句，吃饭没。', ts: now }],
+          ahang: [{ id: 'a1', role: 'assistant', sender: '阿航', content: '你来得正好，我刚想找人说话。', ts: now }],
+          coach: []
+        },
+        memory: {
+          user: { profile: [], preferences: [], boundaries: plan ? plan.boundaries : [], schedule: [], dislikes: [] },
+          agentProfiles: { zhouye: emptyProfile(), chenxiao: emptyProfile(), linchuan: emptyProfile(), zhaokai: emptyProfile(), ahang: emptyProfile() },
+          relationMemory: { zhouye: [], chenxiao: [], linchuan: [], zhaokai: [], ahang: [] }
+        }
+      };
+    }
+
+    function emptyProfile() {
+      return { basic: [], family: [], goals: [], habits: [], dislikes: [], weaknesses: [], relationshipWithUser: [], boundaries: [] };
+    }
+
+    function enterScene(plan) {
+      readConfigFromForm();
+      if (plan) {
+        localStorage.setItem(CUSTOM_KEY, JSON.stringify(plan));
+        localStorage.setItem(V04_STATE_KEY, JSON.stringify(baseStateForV04(plan)));
+      }
+      show('frameWrap');
+      const frame = $('#sceneFrame');
+      frame.src = './scenes-v04.html?v=06-inner-' + Date.now();
+      frame.onload = () => patchSceneFrame(plan);
+    }
+
+    function patchSceneFrame(plan) {
+      if (!plan) return;
+      const win = $('#sceneFrame').contentWindow;
+      if (!win) return;
+      win.__CUSTOM_SCENE_PLAN__ = plan;
+      try {
+        win.introText = function introTextPatched() {
+          return win.__CUSTOM_SCENE_PLAN__.intro;
+        };
+        win.nsfwInstruction = function nsfwInstructionPatched() {
+          const custom = win.__CUSTOM_SCENE_PLAN__;
+          return `本次内容模式：${custom.mode}；强度：${custom.intensity}；关系基调：${custom.relationshipTone}。边界：${custom.boundaries.join('；')}`;
+        };
+        win.sceneSystemPrompt = function sceneSystemPromptPatched() {
+          const custom = win.__CUSTOM_SCENE_PLAN__;
+          const participantNames = custom.participants.map(id => agentNames[id]).join('、');
+          const overrides = Object.entries(custom.agentOverrides || {}).map(([id, value]) => `${agentNames[id] || id}：${value}`).join('\n');
+          return `你是场景模式总控 Scene Agent。当前场景：${custom.scene}。
+用户和以下18岁成年直男体育生兄弟处在同一个现实场景里：${participantNames}。
+
+本次规则包：
+标题：${custom.title}
+内容模式：${custom.mode}
+强度：${custom.intensity}
+关系基调：${custom.relationshipTone}
+氛围：${custom.atmosphere.join('、')}
+边界：${custom.boundaries.join('；')}
+
+场景补充提示：
+${custom.scenePrompt}
+
+角色倾向：
+${overrides}
+
+输出内容：
+1. 一段非常短的场景描写。
+2. 2 到 4 条体育生反应。
+3. 3 到 5 个快捷行为选项。
+
+格式规则：
+- 体育生反应必须是：名字：(动作)台词
+- 动作必须用英文半角括号包住，例如：周野：(起身)看看你在干什么？
+- 快捷行为也必须是：(动作)台词
+- 少旁白，多动作，多口语。
+- 不替用户行动。
+- 保持兄弟关系，不乙游，不霸总。
+
+输出格式：
+场景：...
+周野：(动作)台词
+陈骁：(动作)台词
+快捷：(动作)选项1｜(动作)选项2｜(动作)选项3`;
+        };
+      } catch {}
+    }
+
+    function init() {
+      hydrateConfig();
+      try {
+        const savedPlan = JSON.parse(localStorage.getItem(CUSTOM_KEY) || 'null');
+        if (savedPlan) currentPlan = savedPlan;
+      } catch {}
+
+      $('#guideBtn').onclick = () => {
+        readConfigFromForm();
+        show('guide');
+        setTimeout(() => $('#guideInput').focus(), 120);
+        if (currentPlan) renderPlan(currentPlan);
+      };
+
+      $('#directBtn').onclick = () => { readConfigFromForm(); enterScene(null); };
+      $('#directFromGuide').onclick = () => enterScene(null);
+      $('#backSetup').onclick = () => show('setup');
+      $('#editCancel').onclick = () => $('#editMask').classList.add('hide');
+      $('#editSave').onclick = saveEditor;
+      $('#editMask').onclick = event => { if (event.target.id === 'editMask') $('#editMask').classList.add('hide'); };
+
+      $('#guideForm').onsubmit = async event => {
+        event.preventDefault();
+        const text = $('#guideInput').value.trim();
+        if (!text) return;
+        $('#guideForm').classList.add('loading');
+        $('#guideVoice').textContent = '已收到。正在为您生成配置。';
+        $('#configCard').classList.add('hide');
+        try {
+          const plan = await buildPlan(text);
+          renderPlan(plan);
+        } catch (error) {
+          renderPlan(fallbackPlan(text));
+        }
+        $('#guideForm').classList.remove('loading');
+      };
+    }
+
+    init();
+  </script>
+</body>
+</html>
