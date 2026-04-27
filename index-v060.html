@@ -1,0 +1,938 @@
+<!doctype html>
+<html lang="zh-CN">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover" />
+  <title>今晚打不打球 v0.6</title>
+  <style>
+    * { box-sizing: border-box; }
+    html, body {
+      margin: 0;
+      width: 100%;
+      height: 100%;
+      overflow: hidden;
+      background: #f4f4f5;
+      color: #111;
+      font-family: -apple-system, BlinkMacSystemFont, "PingFang SC", "Microsoft YaHei", system-ui, sans-serif;
+    }
+    button, input, textarea, select { font: inherit; }
+    .hide { display: none !important; }
+
+    .setup {
+      min-height: 100dvh;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      padding: 16px;
+    }
+    .card {
+      width: 100%;
+      max-width: 560px;
+      background: #fff;
+      border: 1px solid #ddd;
+      border-radius: 24px;
+      overflow: hidden;
+      box-shadow: 0 20px 60px #0002;
+    }
+    .head {
+      background: #111;
+      color: #fff;
+      padding: 24px;
+    }
+    .head h1 { margin: 0; }
+    .head p { color: #ccc; line-height: 1.6; }
+    .form {
+      padding: 20px;
+      display: grid;
+      gap: 14px;
+    }
+    label { font-weight: 700; }
+    label span { display: block; margin-bottom: 7px; }
+    input, textarea, select {
+      width: 100%;
+      border: 1px solid #ddd;
+      border-radius: 16px;
+      padding: 12px;
+      outline: 0;
+      background: #fff;
+    }
+    small { color: #666; line-height: 1.5; }
+    .btn {
+      border: 1px solid #ddd;
+      border-radius: 14px;
+      background: #fff;
+      padding: 10px 12px;
+      font-weight: 800;
+      cursor: pointer;
+      white-space: nowrap;
+    }
+    .pri { background: #111 !important; color: #fff !important; border-color: #111 !important; }
+    .warn { background: #fff7ed; border-color: #fed7aa; color: #9a3412; }
+
+    .app {
+      height: 100dvh;
+      width: 100vw;
+      display: flex;
+      overflow: hidden;
+    }
+    .side {
+      width: 400px;
+      max-width: 100vw;
+      background: #fff;
+      border-right: 1px solid #ddd;
+      display: flex;
+      flex-direction: column;
+      overflow: hidden;
+    }
+    .side-head {
+      padding: 16px;
+      border-bottom: 1px solid #ddd;
+      flex-shrink: 0;
+    }
+    .side-head h1 { margin: 0; font-size: 34px; }
+    .toolbar { display: flex; gap: 8px; flex-wrap: wrap; margin-top: 12px; }
+    .status-line {
+      display: flex;
+      gap: 6px;
+      flex-wrap: wrap;
+      margin-top: 10px;
+    }
+    .pill {
+      border-radius: 999px;
+      background: #f4f4f5;
+      color: #555;
+      padding: 5px 9px;
+      font-size: 12px;
+      font-weight: 800;
+    }
+    .pill.hot { background: #fff7ed; color: #9a3412; }
+    .threads { padding: 8px; overflow: auto; flex: 1; }
+    .thread {
+      width: 100%;
+      border: 0;
+      background: #fff;
+      border-radius: 20px;
+      padding: 12px;
+      display: flex;
+      gap: 12px;
+      text-align: left;
+      align-items: center;
+    }
+    .thread.active, .thread:hover { background: #eee; }
+    .avatar {
+      width: 46px;
+      height: 46px;
+      min-width: 46px;
+      border-radius: 17px;
+      background: #111;
+      color: #fff;
+      display: grid;
+      place-items: center;
+      font-weight: 900;
+      font-size: 18px;
+      overflow: hidden;
+    }
+    .avatar img { width: 100%; height: 100%; object-fit: cover; }
+    .thread-meta { min-width: 0; flex: 1; }
+    .thread-name { font-weight: 900; font-size: 18px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+    .preview { font-size: 14px; color: #666; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+
+    .chat {
+      flex: 1;
+      min-width: 0;
+      height: 100dvh;
+      display: flex;
+      flex-direction: column;
+      background: #f4f4f5;
+    }
+    .topbar {
+      min-height: 64px;
+      border-bottom: 1px solid #ddd;
+      background: #fff;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      padding: 10px 12px;
+      gap: 8px;
+      flex-shrink: 0;
+    }
+    .top-left { display: flex; gap: 10px; align-items: center; min-width: 0; }
+    .top-title { min-width: 0; }
+    .chat-name { font-weight: 900; font-size: 20px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+    .top-buttons { display: flex; gap: 8px; flex-wrap: wrap; justify-content: flex-end; }
+    .messages { flex: 1; overflow: auto; padding: 14px 10px; background: #f4f4f5; }
+    .inner { width: 100%; max-width: 860px; margin: 0 auto; display: grid; gap: 12px; }
+    .hint {
+      background: #fff;
+      border: 1px solid #ddd;
+      border-radius: 24px;
+      padding: 13px 16px;
+      color: #555;
+      line-height: 1.65;
+      max-width: 100%;
+      overflow-wrap: anywhere;
+      font-size: 16px;
+    }
+    .time-divider {
+      justify-self: center;
+      background: #e4e4e7;
+      color: #555;
+      border-radius: 999px;
+      padding: 4px 10px;
+      font-size: 12px;
+      font-weight: 800;
+      margin: 4px 0;
+    }
+    .row { width: 100%; display: flex; gap: 10px; align-items: flex-start; }
+    .row.me { justify-content: flex-end; }
+    .message-col { max-width: min(76%, 620px); min-width: 0; display: flex; flex-direction: column; align-items: flex-start; }
+    .row.me .message-col { align-items: flex-end; }
+    .sender { font-size: 13px; color: #666; margin: 0 0 4px 4px; }
+    .bubble {
+      max-width: 100%;
+      background: #fff;
+      border: 1px solid #ddd;
+      border-radius: 22px 22px 22px 7px;
+      padding: 10px 14px;
+      white-space: pre-wrap;
+      line-height: 1.6;
+      overflow-wrap: anywhere;
+      word-break: break-word;
+      font-size: 17px;
+      user-select: none;
+      -webkit-user-select: none;
+      touch-action: manipulation;
+    }
+    .row.me .bubble { background: #111; color: #fff; border-color: #111; border-radius: 22px 22px 7px 22px; }
+    .bubble.pressed { transform: scale(.98); opacity: .78; }
+    .meta-line { font-size: 11px; color: #999; margin-top: 3px; }
+    .coach-card {
+      width: 100%;
+      max-width: 760px;
+      margin: 0 auto;
+      background: #fffbeb;
+      border: 1px solid #fde68a;
+      color: #451a03;
+      border-radius: 22px;
+      padding: 14px 16px;
+      line-height: 1.65;
+      overflow-wrap: anywhere;
+      word-break: break-word;
+      font-size: 16px;
+    }
+    .coach-card b { display: block; margin-bottom: 6px; }
+    .coach-card pre { margin: 0; white-space: pre-wrap; font-family: inherit; overflow-wrap: anywhere; word-break: break-word; }
+    .composer { border-top: 1px solid #ddd; background: #fff; padding: 10px; padding-bottom: calc(10px + env(safe-area-inset-bottom)); flex-shrink: 0; }
+    .composer-form { width: 100%; max-width: 860px; margin: 0 auto; display: flex; gap: 8px; }
+    .composer-form input { border-radius: 999px; }
+    .send { width: 50px; min-width: 50px; border-radius: 999px; }
+
+    .mask { position: fixed; inset: 0; background: #0006; display: flex; align-items: center; justify-content: center; padding: 14px; z-index: 20; }
+    .modal { width: 100%; max-width: 560px; background: #fff; border-radius: 22px; padding: 16px; max-height: 88dvh; overflow: auto; }
+    .modal h3 { margin: 0 0 12px; }
+    .modal textarea { min-height: 130px; resize: vertical; }
+    .modal-grid { display: grid; gap: 12px; }
+    .modal-actions { display: flex; justify-content: space-between; gap: 8px; margin-top: 12px; }
+    .error { color: #b91c1c; padding: 6px 14px; background: #fff; }
+    .back { display: none; }
+
+    @media (max-width: 760px) {
+      .app { display: block; }
+      .side { width: 100%; height: 100dvh; border-right: 0; }
+      .chat { position: fixed; inset: 0; transform: translateX(100%); transition: .18s; z-index: 5; }
+      .chat.open { transform: translateX(0); }
+      .back { display: inline-block; }
+      .top-buttons .optional { display: none; }
+      .message-col { max-width: 72%; }
+      .avatar { width: 42px; height: 42px; min-width: 42px; }
+      .btn { font-size: 16px; padding: 10px 12px; }
+    }
+  </style>
+</head>
+<body>
+  <section id="setup" class="setup">
+    <div class="card">
+      <div class="head">
+        <h1>今晚打不打球</h1>
+        <p>v0.6：18岁角色卡、自动粗口/NSFW状态、5分钟时间分隔、时间上下文、主动消息、轻量路由和深思模型字段。</p>
+      </div>
+      <form id="setupForm" class="form">
+        <label><span>Endpoint</span><input id="endpoint" value="https://api.deepseek.com" /></label>
+        <label><span>API Key</span><input id="apiKey" type="password" placeholder="sk-..." /></label>
+        <label><span>Main Model</span><input id="model" value="deepseek-chat" /></label>
+        <label><span>Router Model</span><input id="routerModel" value="deepseek-chat" /><small>轻量模型，用于判断教练/深思/NSFW/主动消息。可先填同一个模型。</small></label>
+        <label><span>Deep Model</span><input id="deepModel" value="" placeholder="比如 deepseek-reasoner，可留空" /><small>触发深思时使用；留空则使用 Main Model。</small></label>
+        <button class="btn pri">进入 IM</button>
+      </form>
+    </div>
+  </section>
+
+  <section id="app" class="app hide">
+    <aside class="side">
+      <div class="side-head">
+        <div style="display:flex;justify-content:space-between;align-items:center;gap:12px">
+          <div style="min-width:0">
+            <h1>消息</h1>
+            <div id="sideSub" class="preview"></div>
+          </div>
+          <button id="resetCfg" class="btn">配置</button>
+        </div>
+        <div class="toolbar">
+          <button id="profile" class="btn">资料</button>
+          <button id="backup" class="btn">备份</button>
+          <button id="importBtn" class="btn">导入</button>
+          <button id="settingsBtn" class="btn">设置</button>
+          <button id="editToggle" class="btn">编辑关</button>
+          <input id="file" type="file" accept="application/json" class="hide" />
+        </div>
+        <div class="status-line">
+          <span id="modePill" class="pill">safe</span>
+          <span id="deepPill" class="pill">快速</span>
+          <span id="proactivePill" class="pill">主动开</span>
+        </div>
+      </div>
+      <div id="threads" class="threads"></div>
+    </aside>
+
+    <main id="chat" class="chat">
+      <header class="topbar">
+        <div class="top-left">
+          <button id="back" class="btn back">‹</button>
+          <div id="chatAv" class="avatar">群</div>
+          <div class="top-title">
+            <div id="chatName" class="chat-name"></div>
+            <div id="chatSub" class="preview"></div>
+          </div>
+        </div>
+        <div class="top-buttons">
+          <button id="coach" class="btn">教练</button>
+          <button id="remark" class="btn">备注</button>
+          <button id="regen" class="btn optional">改最后并重生</button>
+          <button id="proactiveNow" class="btn optional">主动一下</button>
+          <button id="clear" class="btn optional">清空</button>
+        </div>
+      </header>
+
+      <section class="messages">
+        <div class="inner">
+          <div id="hint" class="hint"></div>
+          <div id="list" class="inner"></div>
+          <div id="typing" class="row hide">
+            <div class="avatar">…</div>
+            <div class="bubble">生成中...</div>
+          </div>
+          <div id="anchor"></div>
+        </div>
+      </section>
+
+      <div id="err" class="error"></div>
+
+      <footer class="composer">
+        <form id="chatForm" class="composer-form">
+          <input id="input" placeholder="发消息..." />
+          <button class="btn pri send">➤</button>
+        </form>
+      </footer>
+    </main>
+  </section>
+
+  <div id="mask" class="mask hide">
+    <div class="modal">
+      <h3 id="modalTitle"></h3>
+      <div id="modalBody" class="modal-grid"></div>
+      <div class="modal-actions">
+        <button id="deleteMsg" class="btn">删除</button>
+        <div>
+          <button id="cancel" class="btn">取消</button>
+          <button id="save" class="btn pri">保存</button>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <script>
+    const CFG_KEY = 'sports-bros-cfg-v060';
+    const STATE_KEY = 'sports-bros-state-v060';
+    const LONG_PRESS_MS = 520;
+    const TIME_GAP_MS = 5 * 60 * 1000;
+    const PROACTIVE_CHECK_MS = 4 * 60 * 1000;
+
+    const agentCards = {
+      zhouye: {
+        id: 'zhouye', name: '周野', age: 18, tag: '篮球队', av: '周',
+        core: '外向主心骨，行动号召型，喜欢直接把人拉出去。',
+        voice: '短句，直接，爱喊人，常说“走啊”“别怂”“人呢”“靠，出来”。',
+        rough: '可以嘴上粗一点，像兄弟一样损人，但不戳真实痛点。',
+        proactive: '喊打球、喊吃饭、问人在哪、把用户从床上拉起来。',
+        boundary: '保持兄弟关系，不乙游，不霸总，不恋爱攻略。'
+      },
+      chenxiao: {
+        id: 'chenxiao', name: '陈骁', age: 18, tag: '足球队', av: '陈',
+        core: '嘴欠损友，起哄、拆台、接梗快。',
+        voice: '爱吐槽，爱接梗，常说“你小子”“笑死”“滚啊”“傻逼吧你”。',
+        rough: '可以用脏话和互损制造兄弟感，但不攻击身份、身体、家庭和创伤。',
+        proactive: '发梗、损一句、丢一句欠揍但有存在感的话。',
+        boundary: '嘴欠但没有恶意，发现用户真的不舒服会收住。'
+      },
+      linchuan: {
+        id: 'linchuan', name: '林川', age: 18, tag: '田径队', av: '林',
+        core: '话少行动派，冷面但会做事，关心不解释。',
+        voice: '短、稳、少废话，常说“吃没”“下来走走”“我顺路”“嗯”。',
+        rough: '很少爆粗，偶尔一句“别硬撑了”比脏话更像他。',
+        proactive: '短问候，问吃没、睡了没、要不要下楼。',
+        boundary: '不大段开导，不煽情，不替用户做决定。'
+      },
+      zhaokai: {
+        id: 'zhaokai', name: '赵恺', age: 18, tag: '健身房', av: '赵',
+        core: '自律健身脑，催饭、催睡、催动起来，带点直男说教。',
+        voice: '靠谱直接，常说“先吃饭”“喝水”“别熬”“动一动”。',
+        rough: '可以用“别作死”“你这作息真离谱”这种兄弟式吐槽。',
+        proactive: '催睡、催吃饭、催训练、提醒喝水。',
+        boundary: '说教要短，别变成健康讲座。'
+      },
+      ahang: {
+        id: 'ahang', name: '阿航', age: 18, tag: '游泳队', av: '航',
+        core: '阳光话痨，热闹、黏人、接话快，气氛组。',
+        voice: '话多、热情、爱喊出去玩，常说“走走走”“我靠好饿”“你快来”。',
+        rough: '可以有黄段子和下流玩笑，但保持活泼，不油腻。',
+        proactive: '分享日常、喊夜宵、喊出去玩、把群聊顶起来。',
+        boundary: '不装深沉，不突然变成恋爱对象。'
+      }
+    };
+
+    const agents = Object.values(agentCards);
+    const threads = [
+      { id: 'group', type: 'group', name: '今晚打不打球', tag: '置顶群聊', av: '群' },
+      ...agents.map(agent => ({ ...agent, type: 'agent' })),
+      { id: 'coach', type: 'coach', name: '兄弟相处教练', tag: '私下建议', av: '教' }
+    ];
+
+    let cfg = null;
+    let active = 'group';
+    let editing = null;
+    let modalMode = '';
+    let loading = false;
+    let longPressTimer = null;
+    let suppressNextClick = false;
+    let proactiveTimer = null;
+
+    function makeMessage(role, sender, content, extra = {}) {
+      return { id: String(Date.now()) + Math.random().toString(36).slice(2), role, sender, content, ts: Date.now(), ...extra };
+    }
+
+    function emptyAgentProfile() {
+      return { basic: [], family: [], goals: [], habits: [], dislikes: [], weaknesses: [], relationshipWithUser: [], boundaries: [] };
+    }
+
+    function defaultState() {
+      const agentProfiles = {};
+      const relationMemory = {};
+      agents.forEach(agent => {
+        agentProfiles[agent.id] = emptyAgentProfile();
+        relationMemory[agent.id] = [];
+      });
+      return {
+        prefs: {
+          name: '我', avatar: '我', avatarUrl: '', edit: false, remarks: {},
+          nsfwGuard: true, autoNSFW: true, proactive: true, notifications: false,
+          deepMode: 'auto'
+        },
+        mode: 'safe',
+        lastActiveAt: Date.now(),
+        lastProactiveAt: 0,
+        conv: {
+          group: [
+            makeMessage('assistant', '周野', '进群了啊。以后这就是「今晚打不打球」。'),
+            makeMessage('assistant', '陈骁', '先说好，进群了就别装高冷。'),
+            makeMessage('assistant', '阿航', '晚上吃不吃夜宵，先投票。')
+          ],
+          zhouye: [makeMessage('assistant', '周野', '有事直接说。刚练完，手机在手。')],
+          chenxiao: [makeMessage('assistant', '陈骁', '咋了，又来找我唠嗑？')],
+          linchuan: [makeMessage('assistant', '林川', '嗯，我在。')],
+          zhaokai: [makeMessage('assistant', '赵恺', '先问一句，今天吃饭没。')],
+          ahang: [makeMessage('assistant', '阿航', '你来得正好，我刚想找人说话。')],
+          coach: []
+        },
+        memory: { user: { profile: [], preferences: [], boundaries: [], schedule: [], dislikes: [] }, agentProfiles, relationMemory },
+        coachVisible: false
+      };
+    }
+
+    let state = defaultState();
+
+    function $(selector) { return document.querySelector(selector); }
+    function escapeHtml(value) { return String(value || '').replaceAll('&', '&amp;').replaceAll('<', '&lt;').replaceAll('>', '&gt;').replaceAll('"', '&quot;'); }
+    function saveState() { state.lastActiveAt = Date.now(); localStorage.setItem(STATE_KEY, JSON.stringify(state)); }
+    function getConversation(id = active) { if (!state.conv[id]) state.conv[id] = []; return state.conv[id]; }
+    function getThread(id = active) { return threads.find(thread => thread.id === id) || threads[0]; }
+    function getAgent(id) { return agents.find(agent => agent.id === id); }
+    function findMessage(messageId) { return getConversation().find(message => message.id === messageId); }
+    function displayName(thread) { return thread.type === 'agent' ? (state.prefs.remarks[thread.id] || thread.name) : thread.name; }
+    function senderName(name) { const agent = agents.find(item => item.name === name); return agent ? (state.prefs.remarks[agent.id] || agent.name) : name; }
+    function avatarHtml() { return state.prefs.avatarUrl ? `<img src="${escapeHtml(state.prefs.avatarUrl)}">` : escapeHtml((state.prefs.avatar || state.prefs.name || '我').slice(0, 2)); }
+
+    function apiUrl() {
+      const endpoint = cfg.endpoint.trim().replace(/\/$/, '');
+      if (endpoint.endsWith('/chat/completions')) return endpoint;
+      if (endpoint.endsWith('/v1')) return `${endpoint}/chat/completions`;
+      return `${endpoint}/v1/chat/completions`;
+    }
+
+    async function callLLM(messages, options = {}) {
+      const model = options.model || cfg.model;
+      const temperature = options.temperature ?? 0.85;
+      const response = await fetch(apiUrl(), {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json', Authorization: `Bearer ${cfg.key}` },
+        body: JSON.stringify({ model, messages, temperature, stream: false })
+      });
+      const text = await response.text();
+      let data = {};
+      try { data = JSON.parse(text); } catch {}
+      if (!response.ok) throw new Error((data.error && data.error.message) || text);
+      return data.choices[0].message.content.trim();
+    }
+
+    function fullTime(ts) {
+      const d = new Date(ts);
+      const y = d.getFullYear();
+      const m = String(d.getMonth() + 1).padStart(2, '0');
+      const day = String(d.getDate()).padStart(2, '0');
+      const h = String(d.getHours()).padStart(2, '0');
+      const min = String(d.getMinutes()).padStart(2, '0');
+      return `${y}-${m}-${day} ${h}:${min}`;
+    }
+
+    function dividerTime(ts) {
+      const d = new Date(ts);
+      const now = new Date();
+      const h = String(d.getHours()).padStart(2, '0');
+      const min = String(d.getMinutes()).padStart(2, '0');
+      const sameDay = d.toDateString() === now.toDateString();
+      const yesterday = new Date(now); yesterday.setDate(now.getDate() - 1);
+      if (sameDay) return `${h}:${min}`;
+      if (d.toDateString() === yesterday.toDateString()) return `昨天 ${h}:${min}`;
+      return `${d.getMonth() + 1}/${d.getDate()} ${h}:${min}`;
+    }
+
+    function timeMood() {
+      const hour = new Date().getHours();
+      if (hour >= 0 && hour < 5) return '深夜';
+      if (hour >= 5 && hour < 10) return '早上';
+      if (hour >= 11 && hour < 14) return '饭点';
+      if (hour >= 18 && hour < 22) return '晚上';
+      return '白天';
+    }
+
+    function memoryBlock(agentId) {
+      const user = state.memory.user || {};
+      const profile = state.memory.agentProfiles?.[agentId] || emptyAgentProfile();
+      const relation = state.memory.relationMemory?.[agentId] || [];
+      return JSON.stringify({ user, agentProfile: profile, relationMemory: relation }, null, 2);
+    }
+
+    function timelineMessages(id) {
+      return getConversation(id)
+        .filter(message => message.role !== 'coach')
+        .slice(-18)
+        .map(message => ({
+          role: message.role === 'user' ? 'user' : 'assistant',
+          content: `[${fullTime(message.ts)}] ${message.sender === '我' ? state.prefs.name : message.sender}：${message.content}`
+        }));
+    }
+
+    function nsfwInstruction() {
+      if (!state.prefs.nsfwGuard) return 'NSFW 总开关关闭。保持普通兄弟群聊天。';
+      if (state.mode === 'safe') return '当前模式：safe。允许真实口语和轻微互损，不主动开启成人内容。';
+      if (state.mode === 'coarse') return '当前模式：coarse。可以更粗糙、嘴欠、带脏话，但不要变油腻。';
+      if (state.mode === 'suggestive') return '当前模式：suggestive。允许成人暗示和黄段子，保持兄弟群语气，用户没继续就收住。';
+      return '当前模式：nsfw。用户已主动进入成人话题。所有角色为18岁成年人；维持兄弟关系和用户边界，不强行推进，不写成恋爱乙游。';
+    }
+
+    function agentCardText(agent) {
+      return `姓名：${agent.name}\n年龄：${agent.age}岁，成年人\n身份：${agent.tag}\n核心性格：${agent.core}\n说话方式：${agent.voice}\n粗口规则：${agent.rough}\n主动消息风格：${agent.proactive}\n边界：${agent.boundary}`;
+    }
+
+    function groupPrompt() {
+      return `你在模拟中文 IM 兄弟群。用户叫${state.prefs.name}。用户是群里兄弟，不是恋爱对象。\n\n当前本地时间：${fullTime(Date.now())}（${timeMood()}）。\n${nsfwInstruction()}\n\n角色卡：\n${agents.map(agentCardText).join('\n---\n')}\n\n三层记忆：\n${JSON.stringify(state.memory, null, 2)}\n\n回复规则：\n- 每次回复2到4条群消息。\n- 每条格式：角色名：消息内容。\n- 可以互相插话、岔题、起哄。\n- 允许真实兄弟口语、轻度脏话和互损。\n- 不攻击用户真实身份、身体、创伤、家庭。\n- 不写小说旁白，不替用户说话。\n- 不乙游，不霸总，不心理咨询师。`;
+    }
+
+    function singlePrompt(agent) {
+      return `${agentCardText(agent)}\n\n当前是一对一私聊。用户叫${state.prefs.name}。\n当前本地时间：${fullTime(Date.now())}（${timeMood()}）。\n${nsfwInstruction()}\n\n三层记忆：\n${memoryBlock(agent.id)}\n\n回复规则：\n- 回复1到4句，像真实 IM 私聊。\n- 可以粗糙、直接、像兄弟。\n- 不要输出“${agent.name}：”前缀。\n- 记忆只自然影响回复，不要说“我读取了记忆”。`;
+    }
+
+    function coachPrompt() {
+      return `你是兄弟相处教练，只私下帮助用户学习如何和直男体育生兄弟自然相处。\n当前时间：${fullTime(Date.now())}。\n输出：评分、判断、风险、改法3条、下次建议。`;
+    }
+
+    function routerPrompt(text, threadId) {
+      return `你是轻量路由模型，只输出 JSON。\n判断用户输入应该如何处理。\n当前线程：${threadId}\n当前模式：${state.mode}\n用户输入：${text}\n\nJSON格式：{"mode":"safe|coarse|suggestive|nsfw","needCoach":false,"needDeep":false,"reason":"短原因"}\n规则：\n- 用户要求社交建议、怎么回、尴尬、不太会时 needCoach=true。\n- 情绪复杂、关系冲突、边界判断、成人内容边界时 needDeep=true。\n- 用户主动黄段子/成人暗示时 mode 可升级。\n- 用户说正常点/别聊黄/收一收时 mode=safe。`;
+    }
+
+    function localRoute(text) {
+      const lower = text.toLowerCase();
+      const reset = ['正常点', '别聊黄', '收一收', '别黄', '算了'].some(key => text.includes(key));
+      const coach = /^\/coach/i.test(text) || ['教练', '帮我看看', '怎么回', '尴尬', '不太会', '怎么和男生'].some(key => text.includes(key));
+      const nsfw = ['聊黄', '黄段子', '色色', '性', 'nsfw', '下流'].some(key => lower.includes(key));
+      const suggestive = ['擦边', '暧昧', '成人', '骚话'].some(key => text.includes(key));
+      const coarse = ['操', '靠', '傻逼', '滚啊', '你小子'].some(key => text.includes(key));
+      let mode = state.mode;
+      if (reset) mode = 'safe';
+      else if (state.prefs.autoNSFW && state.prefs.nsfwGuard && nsfw) mode = 'nsfw';
+      else if (state.prefs.autoNSFW && state.prefs.nsfwGuard && suggestive) mode = 'suggestive';
+      else if (coarse) mode = mode === 'safe' ? 'coarse' : mode;
+      return { mode, needCoach: coach, needDeep: coach || nsfw || suggestive, reason: 'local' };
+    }
+
+    async function routeMessage(text, threadId) {
+      const fallback = localRoute(text);
+      if (!cfg.routerModel) return fallback;
+      try {
+        const raw = await callLLM([
+          { role: 'system', content: routerPrompt(text, threadId) },
+          { role: 'user', content: text }
+        ], { model: cfg.routerModel, temperature: 0.05 });
+        const cleaned = raw.replace(/^```json/i, '').replace(/```$/i, '').trim();
+        const data = JSON.parse(cleaned);
+        return { ...fallback, ...data };
+      } catch {
+        return fallback;
+      }
+    }
+
+    function parseGroupReply(raw) {
+      const parsed = [];
+      raw.split(/\n+/).forEach(line => {
+        const match = line.trim().match(/^([^：:]{1,8})[：:](.+)$/);
+        if (match && agents.some(agent => agent.name === match[1].trim())) {
+          parsed.push({ sender: match[1].trim(), content: match[2].trim() });
+        }
+      });
+      return parsed.length ? parsed.slice(0, 5) : [{ sender: '周野', content: raw.slice(0, 220) }];
+    }
+
+    function bindBubbleEvents() {
+      document.querySelectorAll('[data-mid]').forEach(element => {
+        const messageId = element.dataset.mid;
+        element.onclick = () => {
+          if (suppressNextClick) { suppressNextClick = false; return; }
+          if (state.prefs.edit) openEdit(messageId, 'edit');
+        };
+        element.onpointerdown = () => {
+          clearTimeout(longPressTimer);
+          element.classList.add('pressed');
+          longPressTimer = setTimeout(() => {
+            element.classList.remove('pressed');
+            const message = findMessage(messageId);
+            if (message && message.role === 'user') { suppressNextClick = true; openEdit(messageId, 'edit'); }
+          }, LONG_PRESS_MS);
+        };
+        ['pointerup', 'pointercancel', 'pointerleave'].forEach(eventName => {
+          element.addEventListener(eventName, () => { clearTimeout(longPressTimer); element.classList.remove('pressed'); });
+        });
+      });
+    }
+
+    function render() {
+      const hasConfig = !!cfg;
+      $('#setup').classList.toggle('hide', hasConfig);
+      $('#app').classList.toggle('hide', !hasConfig);
+      if (!hasConfig) return;
+
+      $('#sideSub').textContent = `${cfg.model} · ${state.prefs.name}`;
+      $('#editToggle').textContent = state.prefs.edit ? '编辑开' : '编辑关';
+      $('#editToggle').classList.toggle('pri', state.prefs.edit);
+      $('#modePill').textContent = state.mode;
+      $('#modePill').classList.toggle('hot', state.mode !== 'safe');
+      $('#deepPill').textContent = state.prefs.deepMode === 'auto' ? '自动深思' : state.prefs.deepMode;
+      $('#proactivePill').textContent = state.prefs.proactive ? '主动开' : '主动关';
+
+      const visibleThreads = threads.filter(thread => thread.id !== 'coach' || state.coachVisible || getConversation('coach').length);
+      $('#threads').innerHTML = visibleThreads.map(thread => {
+        const last = getConversation(thread.id).slice(-1)[0];
+        const preview = last ? `${last.sender === '我' ? state.prefs.name : senderName(last.sender)}：${last.content}` : thread.tag;
+        return `
+          <button class="thread ${active === thread.id ? 'active' : ''}" data-id="${thread.id}">
+            <div class="avatar">${escapeHtml(thread.av)}</div>
+            <div class="thread-meta">
+              <div class="thread-name">${escapeHtml(displayName(thread))}</div>
+              <div class="preview">${escapeHtml(preview)}</div>
+            </div>
+          </button>
+        `;
+      }).join('');
+      document.querySelectorAll('.thread').forEach(button => {
+        button.onclick = () => { active = button.dataset.id; $('#chat').classList.add('open'); render(); };
+      });
+
+      const currentThread = getThread();
+      $('#chatName').textContent = displayName(currentThread);
+      $('#chatSub').textContent = currentThread.type === 'group' ? '置顶群聊' : currentThread.tag;
+      $('#chatAv').textContent = currentThread.av;
+      $('#remark').classList.toggle('hide', currentThread.type !== 'agent');
+      $('#coach').classList.toggle('hide', currentThread.type === 'coach');
+      $('#hint').textContent = currentThread.type === 'group'
+        ? 'v0.6：时间超过5分钟显示分隔；自动判断粗口/NSFW/教练/深思；网页打开时会触发主动消息。'
+        : currentThread.type === 'coach' ? '教练区。' : '私聊。长按自己的消息可编辑；备注名只在本机显示。';
+
+      const rows = [];
+      let prevTs = 0;
+      getConversation().forEach(message => {
+        if (!prevTs || message.ts - prevTs > TIME_GAP_MS) rows.push(`<div class="time-divider">${dividerTime(message.ts)}</div>`);
+        prevTs = message.ts;
+        if (message.role === 'coach') {
+          rows.push(`<div class="coach-card"><b>兄弟相处教练</b><pre>${escapeHtml(message.content)}</pre></div>`);
+          return;
+        }
+        const isUser = message.role === 'user';
+        const agent = agents.find(item => item.name === message.sender);
+        const avatar = isUser ? avatarHtml() : escapeHtml(agent ? agent.av : message.sender.slice(0, 1));
+        rows.push(`
+          <div class="row ${isUser ? 'me' : ''}">
+            ${isUser ? '' : `<div class="avatar">${avatar}</div>`}
+            <div class="message-col">
+              ${isUser ? '' : `<div class="sender">${escapeHtml(senderName(message.sender))}</div>`}
+              <div class="bubble" data-mid="${message.id}">${escapeHtml(message.content)}</div>
+              <div class="meta-line">${fullTime(message.ts).slice(11)}${message.edited ? ' · 已修改' : ''}${message.proactive ? ' · 主动消息' : ''}</div>
+            </div>
+            ${isUser ? `<div class="avatar">${avatarHtml()}</div>` : ''}
+          </div>
+        `);
+      });
+      $('#list').innerHTML = rows.join('');
+      bindBubbleEvents();
+      $('#typing').classList.toggle('hide', !loading);
+      $('#anchor').scrollIntoView({ block: 'end' });
+    }
+
+    function showError(message) { $('#err').textContent = message || ''; }
+
+    async function generateReply(id, route = {}) {
+      const currentThread = getThread(id);
+      const model = route.needDeep && cfg.deepModel ? cfg.deepModel : cfg.model;
+      loading = true;
+      render();
+      try {
+        if (currentThread.type === 'group') {
+          const raw = await callLLM([{ role: 'system', content: groupPrompt() }, ...timelineMessages('group')], { model, temperature: 0.9 });
+          parseGroupReply(raw).forEach(reply => getConversation('group').push(makeMessage('assistant', reply.sender, reply.content)));
+        } else if (currentThread.type === 'agent') {
+          const currentAgent = getAgent(id);
+          const raw = await callLLM([{ role: 'system', content: singlePrompt(currentAgent) }, ...timelineMessages(id)], { model, temperature: 0.86 });
+          getConversation(id).push(makeMessage('assistant', currentAgent.name, raw));
+        }
+        saveState();
+      } catch (error) {
+        showError(error.message);
+      } finally {
+        loading = false;
+        render();
+      }
+    }
+
+    async function sendMessage(text) {
+      if (!text || loading) return;
+      showError('');
+      const id = active;
+      const route = await routeMessage(text, id);
+      if (['safe', 'coarse', 'suggestive', 'nsfw'].includes(route.mode)) state.mode = route.mode;
+      getConversation(id).push(makeMessage('user', '我', text));
+      saveState();
+      render();
+      try {
+        if (id !== 'coach' && route.needCoach) {
+          state.coachVisible = true;
+          active = 'coach';
+          getConversation('coach').push(makeMessage('user', '我', text));
+          const model = route.needDeep && cfg.deepModel ? cfg.deepModel : cfg.model;
+          const coachReply = await callLLM([{ role: 'system', content: coachPrompt() }, { role: 'user', content: text }], { model, temperature: 0.45 });
+          getConversation('coach').push({ ...makeMessage('coach', '教练', coachReply), role: 'coach' });
+          saveState();
+          render();
+          return;
+        }
+        if (getThread(id).type === 'coach') {
+          const coachReply = await callLLM([{ role: 'system', content: coachPrompt() }, ...timelineMessages('coach')], { temperature: 0.45 });
+          getConversation('coach').push({ ...makeMessage('coach', '教练', coachReply), role: 'coach' });
+          saveState();
+          render();
+          return;
+        }
+        await generateReply(id, route);
+      } catch (error) {
+        showError(error.message);
+      }
+    }
+
+    function proactiveCandidate() {
+      const hour = new Date().getHours();
+      if (hour >= 0 && hour < 5) return { id: 'linchuan', text: '还没睡？' };
+      if (hour >= 11 && hour < 14) return { id: 'zhaokai', text: '吃饭没，别又糊弄。' };
+      if (hour >= 18 && hour < 22) return { id: 'zhouye', text: '晚上出来不？别窝着。' };
+      const pool = [
+        { id: 'chenxiao', text: '人呢，你小子又消失了？' },
+        { id: 'ahang', text: '我靠我有点想吃夜宵了，你来不来。' },
+        { id: 'zhouye', text: '走啊，动一动。' }
+      ];
+      return pool[Math.floor(Math.random() * pool.length)];
+    }
+
+    async function maybeProactive(force = false) {
+      if (!state.prefs.proactive || loading || !cfg) return;
+      const now = Date.now();
+      const lastAny = Math.max(...Object.values(state.conv).flat().map(message => message.ts || 0));
+      const enoughIdle = now - lastAny > 2 * 60 * 60 * 1000;
+      const enoughSinceProactive = now - (state.lastProactiveAt || 0) > 60 * 60 * 1000;
+      if (!force && (!enoughIdle || !enoughSinceProactive)) return;
+      const candidate = proactiveCandidate();
+      const agent = getAgent(candidate.id);
+      getConversation(candidate.id).push(makeMessage('assistant', agent.name, candidate.text, { proactive: true }));
+      getConversation('group').push(makeMessage('assistant', agent.name, candidate.text, { proactive: true }));
+      state.lastProactiveAt = now;
+      saveState();
+      render();
+      if (state.prefs.notifications && 'Notification' in window && Notification.permission === 'granted') {
+        new Notification(senderName(agent.name), { body: candidate.text });
+      }
+    }
+
+    function openModal(title, html, mode) {
+      modalMode = mode;
+      $('#modalTitle').textContent = title;
+      $('#modalBody').innerHTML = html;
+      $('#deleteMsg').classList.toggle('hide', mode !== 'edit');
+      $('#mask').classList.remove('hide');
+    }
+    function closeModal() { $('#mask').classList.add('hide'); editing = null; }
+
+    function openEdit(messageId, mode) {
+      const conversation = getConversation();
+      const index = conversation.findIndex(message => message.id === messageId);
+      if (index < 0 || conversation[index].role === 'coach') return;
+      editing = { id: messageId, mode };
+      openModal(mode === 'regen' ? '修改最后一句并重生' : '修改消息', `<textarea id="editText">${escapeHtml(conversation[index].content)}</textarea><small>保存后会修改上下文。</small>`, mode);
+    }
+
+    function saveModal() {
+      if (modalMode === 'profile') {
+        state.prefs.name = $('#pname').value.trim() || '我';
+        state.prefs.avatar = $('#pav').value.trim() || '我';
+        state.prefs.avatarUrl = $('#purl').value.trim();
+        saveState(); closeModal(); render(); return;
+      }
+      if (modalMode === 'remark') {
+        state.prefs.remarks[active] = $('#rname').value.trim();
+        saveState(); closeModal(); render(); return;
+      }
+      if (modalMode === 'settings') {
+        state.prefs.nsfwGuard = $('#nsfwGuard').checked;
+        state.prefs.autoNSFW = $('#autoNSFW').checked;
+        state.prefs.proactive = $('#proactiveSetting').checked;
+        state.prefs.notifications = $('#notifySetting').checked;
+        state.prefs.deepMode = $('#deepMode').value;
+        if (state.prefs.notifications && 'Notification' in window && Notification.permission === 'default') Notification.requestPermission();
+        saveState(); closeModal(); render(); return;
+      }
+      const conversation = getConversation();
+      const index = conversation.findIndex(message => message.id === editing.id);
+      const value = $('#editText').value.trim();
+      if (index >= 0 && value) {
+        conversation[index].content = value;
+        conversation[index].edited = true;
+        if (editing.mode === 'regen') {
+          conversation.splice(index + 1);
+          saveState(); closeModal(); generateReply(active, { needDeep: true }); return;
+        }
+        saveState();
+      }
+      closeModal(); render();
+    }
+
+    function deleteMessage() {
+      const conversation = getConversation();
+      const index = conversation.findIndex(message => message.id === (editing && editing.id));
+      if (index >= 0) conversation.splice(index, 1);
+      saveState(); closeModal(); render();
+    }
+
+    function openProfile() {
+      openModal('个人资料', `<label>名称<input id="pname" value="${escapeHtml(state.prefs.name)}"></label><label>文字头像<input id="pav" value="${escapeHtml(state.prefs.avatar)}"></label><label>头像URL/Base64<input id="purl" value="${escapeHtml(state.prefs.avatarUrl)}"></label>`, 'profile');
+    }
+    function openRemark() {
+      openModal('备注名', `<label>备注名<input id="rname" value="${escapeHtml(state.prefs.remarks[active] || '')}"></label><small>仅本机显示。</small>`, 'remark');
+    }
+    function openSettings() {
+      openModal('v0.6 设置', `
+        <label><input id="nsfwGuard" type="checkbox" ${state.prefs.nsfwGuard ? 'checked' : ''}> 成人/粗口总开关</label>
+        <label><input id="autoNSFW" type="checkbox" ${state.prefs.autoNSFW ? 'checked' : ''}> 自动判断 coarse / suggestive / nsfw</label>
+        <label><input id="proactiveSetting" type="checkbox" ${state.prefs.proactive ? 'checked' : ''}> 网页打开时允许 Agent 主动消息</label>
+        <label><input id="notifySetting" type="checkbox" ${state.prefs.notifications ? 'checked' : ''}> 浏览器通知权限</label>
+        <label>深思模式<select id="deepMode"><option value="auto" ${state.prefs.deepMode === 'auto' ? 'selected' : ''}>自动</option><option value="fast" ${state.prefs.deepMode === 'fast' ? 'selected' : ''}>快速</option><option value="deep" ${state.prefs.deepMode === 'deep' ? 'selected' : ''}>强制深思</option></select></label>
+      `, 'settings');
+    }
+    function regenerateLastUserMessage() {
+      const conversation = getConversation();
+      for (let index = conversation.length - 1; index >= 0; index--) {
+        if (conversation[index].role === 'user') { openEdit(conversation[index].id, 'regen'); return; }
+      }
+      showError('当前会话没有你的消息');
+    }
+    function backup() {
+      const blob = new Blob([JSON.stringify({ version: 'v0.6', state }, null, 2)], { type: 'application/json' });
+      const link = document.createElement('a');
+      link.href = URL.createObjectURL(blob);
+      link.download = 'sports-bros-backup-v060.json';
+      link.click(); URL.revokeObjectURL(link.href);
+    }
+    function importBackup(file) {
+      const reader = new FileReader();
+      reader.onload = () => {
+        try { const data = JSON.parse(reader.result); if (data.state) { state = { ...defaultState(), ...data.state }; saveState(); render(); } else showError('格式不对'); }
+        catch (error) { showError(error.message); }
+      };
+      reader.readAsText(file);
+    }
+
+    function init() {
+      try {
+        cfg = JSON.parse(localStorage.getItem(CFG_KEY) || 'null');
+        const saved = JSON.parse(localStorage.getItem(STATE_KEY) || 'null');
+        if (saved) {
+          const base = defaultState();
+          state = { ...base, ...saved, prefs: { ...base.prefs, ...(saved.prefs || {}) }, conv: { ...base.conv, ...(saved.conv || {}) }, memory: { ...base.memory, ...(saved.memory || {}) } };
+        }
+      } catch {}
+      $('#setupForm').onsubmit = event => {
+        event.preventDefault();
+        cfg = { endpoint: $('#endpoint').value.trim(), key: $('#apiKey').value.trim(), model: $('#model').value.trim(), routerModel: $('#routerModel').value.trim(), deepModel: $('#deepModel').value.trim() };
+        localStorage.setItem(CFG_KEY, JSON.stringify(cfg));
+        render();
+        maybeProactive(true);
+      };
+      $('#resetCfg').onclick = () => { localStorage.removeItem(CFG_KEY); cfg = null; render(); };
+      $('#chatForm').onsubmit = event => { event.preventDefault(); const value = $('#input').value.trim(); $('#input').value = ''; sendMessage(value); };
+      $('#back').onclick = () => $('#chat').classList.remove('open');
+      $('#profile').onclick = openProfile;
+      $('#remark').onclick = openRemark;
+      $('#settingsBtn').onclick = openSettings;
+      $('#regen').onclick = regenerateLastUserMessage;
+      $('#backup').onclick = backup;
+      $('#importBtn').onclick = () => $('#file').click();
+      $('#file').onchange = event => { if (event.target.files[0]) importBackup(event.target.files[0]); };
+      $('#editToggle').onclick = () => { state.prefs.edit = !state.prefs.edit; saveState(); render(); };
+      $('#coach').onclick = () => { state.coachVisible = true; active = 'coach'; $('#chat').classList.add('open'); render(); };
+      $('#proactiveNow').onclick = () => maybeProactive(true);
+      $('#clear').onclick = () => { getConversation(active).length = 0; saveState(); render(); };
+      $('#cancel').onclick = closeModal;
+      $('#save').onclick = saveModal;
+      $('#deleteMsg').onclick = deleteMessage;
+      $('#mask').onclick = event => { if (event.target.id === 'mask') closeModal(); };
+      render();
+      maybeProactive(false);
+      proactiveTimer = setInterval(() => maybeProactive(false), PROACTIVE_CHECK_MS);
+    }
+
+    init();
+  </script>
+</body>
+</html>
