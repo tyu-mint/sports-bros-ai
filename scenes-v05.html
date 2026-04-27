@@ -1,0 +1,576 @@
+<!doctype html>
+<html lang="zh-CN">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover" />
+  <title>场景模式 v0.5</title>
+  <style>
+    * { box-sizing: border-box; }
+
+    html, body {
+      margin: 0;
+      width: 100%;
+      height: 100%;
+      overflow: hidden;
+      background: #0f0f12;
+      color: #f4f4f5;
+      font-family: -apple-system, BlinkMacSystemFont, "PingFang SC", "Microsoft YaHei", system-ui, sans-serif;
+    }
+
+    button, input, textarea { font: inherit; }
+    .hide { display: none !important; }
+
+    .screen {
+      width: 100vw;
+      height: 100dvh;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      padding: 22px;
+      background:
+        radial-gradient(circle at 30% 20%, #27272a 0, transparent 32%),
+        radial-gradient(circle at 80% 90%, #18181b 0, transparent 30%),
+        #0f0f12;
+    }
+
+    .setup-card {
+      width: 100%;
+      max-width: 560px;
+      background: #18181b;
+      border: 1px solid #3f3f46;
+      border-radius: 30px;
+      overflow: hidden;
+      box-shadow: 0 24px 80px #0008;
+    }
+
+    .setup-head {
+      padding: 28px;
+      background: #09090b;
+    }
+
+    .setup-head h1 {
+      margin: 0;
+      font-size: 28px;
+      letter-spacing: .02em;
+    }
+
+    .setup-head p {
+      color: #a1a1aa;
+      line-height: 1.7;
+      margin: 10px 0 0;
+    }
+
+    .form {
+      padding: 22px;
+      display: grid;
+      gap: 14px;
+    }
+
+    label span {
+      display: block;
+      margin-bottom: 8px;
+      color: #d4d4d8;
+      font-weight: 800;
+      font-size: 14px;
+    }
+
+    input, textarea {
+      width: 100%;
+      border: 1px solid #3f3f46;
+      background: #09090b;
+      color: #f4f4f5;
+      border-radius: 18px;
+      padding: 13px 15px;
+      outline: 0;
+    }
+
+    .entry-actions {
+      display: grid;
+      place-items: center;
+      gap: 14px;
+      padding-top: 6px;
+    }
+
+    .circle-btn {
+      width: 78px;
+      height: 78px;
+      border-radius: 999px;
+      border: 1px solid #f4f4f5;
+      background: #f4f4f5;
+      color: #09090b;
+      display: grid;
+      place-items: center;
+      font-size: 38px;
+      font-weight: 900;
+      cursor: pointer;
+      box-shadow: 0 20px 60px #0006;
+    }
+
+    .circle-btn:active { transform: scale(.97); }
+
+    .btn {
+      border: 1px solid #3f3f46;
+      background: #27272a;
+      color: #f4f4f5;
+      border-radius: 16px;
+      padding: 10px 14px;
+      font-weight: 850;
+      cursor: pointer;
+      white-space: nowrap;
+    }
+
+    .btn.primary {
+      background: #f4f4f5;
+      color: #09090b;
+      border-color: #f4f4f5;
+    }
+
+    .quiet {
+      color: #a1a1aa;
+      font-size: 13px;
+      line-height: 1.5;
+    }
+
+    .guide {
+      width: 100vw;
+      height: 100dvh;
+      display: grid;
+      grid-template-rows: 1fr auto;
+      background:
+        radial-gradient(circle at 50% 20%, #27272a 0, transparent 30%),
+        #0f0f12;
+    }
+
+    .guide-main {
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      padding: 22px;
+    }
+
+    .guide-box {
+      width: 100%;
+      max-width: 720px;
+      display: grid;
+      gap: 18px;
+    }
+
+    .guide-voice {
+      text-align: center;
+      color: #e4e4e7;
+      font-size: 19px;
+      line-height: 1.75;
+      white-space: pre-wrap;
+    }
+
+    .guide-input-row {
+      display: flex;
+      gap: 10px;
+      align-items: center;
+    }
+
+    .guide-input {
+      min-height: 60px;
+      border-radius: 999px;
+      padding: 0 22px;
+      font-size: 18px;
+      text-align: center;
+    }
+
+    .send-btn {
+      width: 58px;
+      height: 58px;
+      min-width: 58px;
+      border-radius: 999px;
+      border: 1px solid #f4f4f5;
+      background: #f4f4f5;
+      color: #09090b;
+      font-size: 28px;
+      font-weight: 900;
+      cursor: pointer;
+    }
+
+    .confirm-card {
+      border: 1px solid #3f3f46;
+      background: #18181b;
+      border-radius: 26px;
+      padding: 18px;
+      line-height: 1.75;
+      color: #e4e4e7;
+      white-space: pre-wrap;
+      box-shadow: 0 20px 60px #0004;
+    }
+
+    .confirm-actions {
+      display: flex;
+      gap: 10px;
+      justify-content: center;
+      flex-wrap: wrap;
+    }
+
+    .guide-footer {
+      padding: 14px;
+      padding-bottom: calc(14px + env(safe-area-inset-bottom));
+      display: flex;
+      justify-content: center;
+      gap: 10px;
+    }
+
+    .frame-wrap {
+      width: 100vw;
+      height: 100dvh;
+      overflow: hidden;
+      background: #0f0f12;
+    }
+
+    iframe {
+      width: 100%;
+      height: 100%;
+      border: 0;
+      display: block;
+    }
+
+    .loading {
+      opacity: .7;
+      pointer-events: none;
+    }
+
+    @media (max-width: 720px) {
+      .screen { align-items: stretch; padding: 14px; }
+      .setup-card { margin: auto 0; }
+      .setup-head { padding: 22px; }
+      .setup-head h1 { font-size: 25px; }
+      .form { padding: 18px; }
+      .circle-btn { width: 74px; height: 74px; }
+      .guide-input-row { gap: 8px; }
+      .guide-input { font-size: 17px; min-height: 58px; }
+      .send-btn { width: 56px; height: 56px; min-width: 56px; }
+      .guide-voice { font-size: 18px; }
+    }
+  </style>
+</head>
+<body>
+  <section id="setup" class="screen">
+    <div class="setup-card">
+      <div class="setup-head">
+        <h1>场景模式</h1>
+        <p>先连接模型。你可以让它带你进入一个更贴合当下心情的场景，也可以直接进入默认场景。</p>
+      </div>
+      <form id="setupForm" class="form">
+        <label><span>Endpoint</span><input id="endpoint" value="https://api.deepseek.com" /></label>
+        <label><span>API Key</span><input id="apiKey" type="password" placeholder="sk-..." /></label>
+        <label><span>Main Model</span><input id="model" value="deepseek-chat" /></label>
+        <label><span>Router Model</span><input id="routerModel" value="deepseek-chat" /></label>
+        <label><span>Deep Model</span><input id="deepModel" value="" /></label>
+        <div class="entry-actions">
+          <button id="guideBtn" class="circle-btn" type="button">›</button>
+          <button id="directBtn" class="btn" type="button">直接进入场景</button>
+          <div class="quiet">圆形按钮会先问你想进入怎样的氛围。</div>
+        </div>
+      </form>
+    </div>
+  </section>
+
+  <section id="guide" class="guide hide">
+    <div class="guide-main">
+      <div class="guide-box">
+        <div id="guideVoice" class="guide-voice">今天想被带到什么样的地方？
+你可以说心情，也可以直接说想发生什么。</div>
+        <form id="guideForm" class="guide-input-row">
+          <input id="guideInput" class="guide-input" autocomplete="off" />
+          <button id="guideSend" class="send-btn">›</button>
+        </form>
+        <div id="confirmCard" class="confirm-card hide"></div>
+        <div id="confirmActions" class="confirm-actions hide">
+          <button id="enterCustom" class="btn primary" type="button">进入</button>
+          <button id="tryAgain" class="btn" type="button">重新说</button>
+        </div>
+      </div>
+    </div>
+    <div class="guide-footer">
+      <button id="backSetup" class="btn" type="button">返回</button>
+      <button id="directFromGuide" class="btn" type="button">直接进入场景</button>
+    </div>
+  </section>
+
+  <section id="frameWrap" class="frame-wrap hide">
+    <iframe id="sceneFrame" src="about:blank"></iframe>
+  </section>
+
+  <script>
+    const CONFIG_KEY = 'sports-bros-scene-config-v05';
+    const V04_CONFIG_KEY = 'sports-bros-scene-config-v04';
+    const V04_STATE_KEY = 'sports-bros-scene-state-v04';
+    const CUSTOM_KEY = 'sports-bros-scene-custom-v05';
+
+    let config = null;
+    let customPlan = null;
+
+    function $(selector) {
+      return document.querySelector(selector);
+    }
+
+    function show(id) {
+      ['setup', 'guide', 'frameWrap'].forEach(name => $('#' + name).classList.toggle('hide', name !== id));
+    }
+
+    function normalizeEndpoint(endpoint) {
+      const trimmed = endpoint.trim().replace(/\/$/, '');
+      if (trimmed.endsWith('/chat/completions')) return trimmed;
+      if (trimmed.endsWith('/v1')) return `${trimmed}/chat/completions`;
+      return `${trimmed}/v1/chat/completions`;
+    }
+
+    function readConfigFromForm() {
+      config = {
+        endpoint: $('#endpoint').value.trim(),
+        key: $('#apiKey').value.trim(),
+        model: $('#model').value.trim(),
+        routerModel: $('#routerModel').value.trim(),
+        deepModel: $('#deepModel').value.trim()
+      };
+      localStorage.setItem(CONFIG_KEY, JSON.stringify(config));
+      localStorage.setItem(V04_CONFIG_KEY, JSON.stringify(config));
+      return config;
+    }
+
+    function hydrateConfig() {
+      try {
+        config = JSON.parse(localStorage.getItem(CONFIG_KEY) || localStorage.getItem(V04_CONFIG_KEY) || 'null');
+        if (config) {
+          $('#endpoint').value = config.endpoint || 'https://api.deepseek.com';
+          $('#apiKey').value = config.key || '';
+          $('#model').value = config.model || 'deepseek-chat';
+          $('#routerModel').value = config.routerModel || config.model || 'deepseek-chat';
+          $('#deepModel').value = config.deepModel || '';
+        }
+      } catch {}
+    }
+
+    async function callGuide(messages, temperature = 0.7) {
+      const response = await fetch(normalizeEndpoint(config.endpoint), {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          Authorization: `Bearer ${config.key}`
+        },
+        body: JSON.stringify({
+          model: config.model,
+          messages,
+          temperature,
+          stream: false
+        })
+      });
+      const text = await response.text();
+      let data = {};
+      try { data = JSON.parse(text); } catch {}
+      if (!response.ok) throw new Error((data.error && data.error.message) || text || `HTTP ${response.status}`);
+      return data.choices[0].message.content.trim();
+    }
+
+    function guideSystemPrompt() {
+      return `你是一个说话很甜、很会照顾用户体验的场景向导。你不会使用“定制梦境”这个词。
+用户会描述心情、想体验的氛围，或者直接指定一个场景。
+你的任务是温柔确认需求，并生成可交给场景模式使用的配置。
+
+只输出 JSON，不要 Markdown，不要代码块。
+JSON 字段：
+{
+  "reply": "用很甜但不油腻的语气确认用户想要的体验，1到3句。",
+  "title": "短标题，2到8个字",
+  "scene": "一个场景名，比如宿舍/篮球场/雨天校门口/夜宵摊，也可以是用户指定的新场景",
+  "intro": "进入场景时显示的一段短描写，80到160字",
+  "systemPrompt": "给 Scene Agent 的补充系统提示，说明氛围、节奏、角色表现、边界。不要出现定制梦境四个字。",
+  "quick": ["(动作)快捷行为1", "(动作)快捷行为2", "(动作)快捷行为3", "(动作)快捷行为4"]
+}
+
+规则：
+- 角色仍然是五个18岁成年直男体育生兄弟：周野、陈骁、林川、赵恺、阿航。
+- 维持兄弟感，不乙游，不霸总。
+- 如果用户情绪低落，场景应更包裹、更自然，但不要心理咨询腔。
+- 如果用户直接指定场景，以用户指定为准。
+- quick 必须使用英文半角括号动作格式，例如：(坐到床边)问他们今晚还出不出去。`;
+    }
+
+    function safeJsonParse(text) {
+      const cleaned = String(text || '').replace(/^```json/i, '').replace(/```$/i, '').trim();
+      try { return JSON.parse(cleaned); } catch {}
+      const match = cleaned.match(/\{[\s\S]*\}/);
+      if (match) return JSON.parse(match[0]);
+      throw new Error('向导返回格式不对');
+    }
+
+    function fallbackPlan(userText) {
+      return {
+        reply: '我懂了。那就先把你放进一个有人接住你、但又不会把话说得太重的地方。',
+        title: '宿舍',
+        scene: '宿舍',
+        intro: '宿舍灯光不亮不暗，桌上放着水和外卖袋。几个人都在，周野靠着椅背看过来，陈骁嘴上欠，林川安静地把椅子踢过来一点，赵恺拧开水瓶，阿航趴在椅背上等你开口。',
+        systemPrompt: `用户刚才说：${userText}\n整体氛围：兄弟在场，轻松、接得住、短句口语。不要过度煽情。`,
+        quick: ['(走进去)说今天有点累', '(坐到床边)问他们在干什么', '(靠着门框)看他们谁先说话', '(拿起水瓶)让他们别盯着你']
+      };
+    }
+
+    async function buildPlan(userText) {
+      const raw = await callGuide([
+        { role: 'system', content: guideSystemPrompt() },
+        { role: 'user', content: userText }
+      ], 0.72);
+      const plan = safeJsonParse(raw);
+      const fallback = fallbackPlan(userText);
+      return {
+        reply: plan.reply || fallback.reply,
+        title: plan.title || plan.scene || fallback.title,
+        scene: plan.scene || plan.title || fallback.scene,
+        intro: plan.intro || fallback.intro,
+        systemPrompt: plan.systemPrompt || fallback.systemPrompt,
+        quick: Array.isArray(plan.quick) && plan.quick.length ? plan.quick.slice(0, 5) : fallback.quick
+      };
+    }
+
+    function confirmPlan(plan) {
+      $('#guideVoice').textContent = plan.reply;
+      $('#confirmCard').classList.remove('hide');
+      $('#confirmActions').classList.remove('hide');
+      $('#confirmCard').textContent = `${plan.title}\n\n${plan.intro}`;
+      localStorage.setItem(CUSTOM_KEY, JSON.stringify(plan));
+    }
+
+    function baseStateForV04(plan) {
+      const now = Date.now();
+      return {
+        scene: plan ? plan.scene : '宿舍',
+        sceneLog: plan ? [{ role: 'scene', text: plan.intro }] : [],
+        quick: plan ? plan.quick : ['(起身)看看你在干什么？', '(靠在椅背上)说今天累死了', '(拿起手机)问他们要不要吃夜宵', '(看向林川)让他陪你下楼走走'],
+        prefs: {
+          name: '我', avatar: '我', avatarUrl: '', edit: false, remarks: {}, nsfwGuard: true, autoNSFW: true, proactive: true, notifications: false, deepMode: 'auto'
+        },
+        mode: 'safe',
+        lastActiveAt: now,
+        lastProactiveAt: 0,
+        im: {
+          group: [
+            { id: 'g1', role: 'assistant', sender: '周野', content: '进来了？那别光站着。', ts: now },
+            { id: 'g2', role: 'assistant', sender: '陈骁', content: '哟，终于来了。', ts: now },
+            { id: 'g3', role: 'assistant', sender: '阿航', content: '你先说，今天想去哪儿。', ts: now }
+          ],
+          zhouye: [{ id: 'z1', role: 'assistant', sender: '周野', content: '有事直接说。', ts: now }],
+          chenxiao: [{ id: 'c1', role: 'assistant', sender: '陈骁', content: '咋了，又找我唠？', ts: now }],
+          linchuan: [{ id: 'l1', role: 'assistant', sender: '林川', content: '嗯，我在。', ts: now }],
+          zhaokai: [{ id: 'k1', role: 'assistant', sender: '赵恺', content: '先问一句，吃饭没。', ts: now }],
+          ahang: [{ id: 'a1', role: 'assistant', sender: '阿航', content: '你来得正好，我刚想找人说话。', ts: now }],
+          coach: []
+        },
+        memory: {
+          user: { profile: [], preferences: [], boundaries: [], schedule: [], dislikes: [] },
+          agentProfiles: {
+            zhouye: { basic: [], family: [], goals: [], habits: [], dislikes: [], weaknesses: [], relationshipWithUser: [], boundaries: [] },
+            chenxiao: { basic: [], family: [], goals: [], habits: [], dislikes: [], weaknesses: [], relationshipWithUser: [], boundaries: [] },
+            linchuan: { basic: [], family: [], goals: [], habits: [], dislikes: [], weaknesses: [], relationshipWithUser: [], boundaries: [] },
+            zhaokai: { basic: [], family: [], goals: [], habits: [], dislikes: [], weaknesses: [], relationshipWithUser: [], boundaries: [] },
+            ahang: { basic: [], family: [], goals: [], habits: [], dislikes: [], weaknesses: [], relationshipWithUser: [], boundaries: [] }
+          },
+          relationMemory: { zhouye: [], chenxiao: [], linchuan: [], zhaokai: [], ahang: [] }
+        }
+      };
+    }
+
+    function enterScene(plan) {
+      readConfigFromForm();
+      if (plan) {
+        localStorage.setItem(CUSTOM_KEY, JSON.stringify(plan));
+        localStorage.setItem(V04_STATE_KEY, JSON.stringify(baseStateForV04(plan)));
+      }
+      show('frameWrap');
+      const frame = $('#sceneFrame');
+      frame.src = './scenes-v04.html?v=05-inner-' + Date.now();
+      frame.onload = () => patchSceneFrame(plan);
+    }
+
+    function patchSceneFrame(plan) {
+      if (!plan) return;
+      const win = $('#sceneFrame').contentWindow;
+      if (!win) return;
+      win.__CUSTOM_SCENE_PLAN__ = plan;
+      try {
+        win.introText = function introTextPatched() {
+          return win.__CUSTOM_SCENE_PLAN__.intro;
+        };
+        win.sceneSystemPrompt = function sceneSystemPromptPatched() {
+          const custom = win.__CUSTOM_SCENE_PLAN__;
+          return `你是场景模式总控 Scene Agent。当前场景：${custom.scene}。
+用户和五个18岁成年直男体育生兄弟处在同一个现实场景里：周野篮球队、陈骁足球队、林川田径队、赵恺健身、阿航游泳队。
+
+本次场景补充设定：
+${custom.systemPrompt}
+
+输出内容：
+1. 一段非常短的场景描写。
+2. 2 到 4 条体育生反应。
+3. 3 到 5 个快捷行为选项。
+
+格式规则：
+- 体育生反应必须是：名字：(动作)台词
+- 动作必须用英文半角括号包住，例如：周野：(起身)看看你在干什么？
+- 快捷行为也必须是：(动作)台词
+- 少旁白，多动作，多口语。
+- 不替用户行动。
+- 保持兄弟关系，不乙游，不霸总。
+
+输出格式：
+场景：...
+周野：(动作)台词
+陈骁：(动作)台词
+快捷：(动作)选项1｜(动作)选项2｜(动作)选项3`;
+        };
+      } catch {}
+    }
+
+    function init() {
+      hydrateConfig();
+
+      $('#guideBtn').onclick = () => {
+        readConfigFromForm();
+        show('guide');
+        setTimeout(() => $('#guideInput').focus(), 120);
+      };
+
+      $('#directBtn').onclick = () => {
+        readConfigFromForm();
+        enterScene(null);
+      };
+
+      $('#directFromGuide').onclick = () => enterScene(null);
+      $('#backSetup').onclick = () => show('setup');
+      $('#tryAgain').onclick = () => {
+        customPlan = null;
+        $('#confirmCard').classList.add('hide');
+        $('#confirmActions').classList.add('hide');
+        $('#guideVoice').textContent = '那我们重新来。你现在想进入什么样的氛围？';
+        $('#guideInput').value = '';
+        $('#guideInput').focus();
+      };
+      $('#enterCustom').onclick = () => enterScene(customPlan);
+
+      $('#guideForm').onsubmit = async event => {
+        event.preventDefault();
+        const text = $('#guideInput').value.trim();
+        if (!text) return;
+        $('#guideForm').classList.add('loading');
+        $('#guideVoice').textContent = '我在帮你把感觉收拢成一个可以进去的场景。';
+        $('#confirmCard').classList.add('hide');
+        $('#confirmActions').classList.add('hide');
+        try {
+          customPlan = await buildPlan(text);
+        } catch (error) {
+          customPlan = fallbackPlan(text);
+        }
+        $('#guideForm').classList.remove('loading');
+        confirmPlan(customPlan);
+      };
+    }
+
+    init();
+  </script>
+</body>
+</html>
