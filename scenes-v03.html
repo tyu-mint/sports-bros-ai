@@ -1,0 +1,734 @@
+<!doctype html>
+<html lang="zh-CN">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover" />
+  <title>场景模式 v0.3</title>
+  <style>
+    * { box-sizing: border-box; }
+
+    html, body {
+      margin: 0;
+      width: 100%;
+      height: 100%;
+      overflow: hidden;
+      background: #0f0f12;
+      color: #f4f4f5;
+      font-family: -apple-system, BlinkMacSystemFont, "PingFang SC", "Microsoft YaHei", system-ui, sans-serif;
+    }
+
+    button, input, textarea, select { font: inherit; }
+    .hide { display: none !important; }
+
+    .setup {
+      min-height: 100dvh;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      padding: 16px;
+      background: linear-gradient(135deg, #111, #18181b);
+    }
+
+    .card {
+      width: 100%;
+      max-width: 560px;
+      background: #18181b;
+      border: 1px solid #3f3f46;
+      border-radius: 28px;
+      overflow: hidden;
+      box-shadow: 0 24px 80px #0008;
+    }
+
+    .card-head { padding: 26px; background: #09090b; }
+    .card-head h1 { margin: 0; font-size: 26px; }
+    .card-head p { color: #a1a1aa; line-height: 1.7; }
+
+    .form { padding: 22px; display: grid; gap: 16px; }
+    label span { display: block; margin-bottom: 8px; color: #d4d4d8; font-weight: 800; font-size: 14px; }
+
+    input, textarea, select {
+      width: 100%;
+      border: 1px solid #3f3f46;
+      background: #09090b;
+      color: #f4f4f5;
+      border-radius: 16px;
+      padding: 12px 14px;
+      outline: 0;
+    }
+
+    .btn {
+      border: 1px solid #3f3f46;
+      background: #27272a;
+      color: #f4f4f5;
+      border-radius: 16px;
+      padding: 10px 12px;
+      font-weight: 850;
+      cursor: pointer;
+      white-space: nowrap;
+    }
+
+    .btn.primary { background: #f4f4f5; color: #09090b; border-color: #f4f4f5; }
+    .btn.active { background: #f4f4f5; color: #09090b; border-color: #f4f4f5; }
+
+    .app {
+      height: 100dvh;
+      width: 100vw;
+      display: grid;
+      grid-template-columns: 320px minmax(0, 1fr) 380px;
+      overflow: hidden;
+    }
+
+    .side, .im-panel {
+      background: #18181bcc;
+      border-color: #3f3f46;
+      padding: 14px;
+      overflow: auto;
+    }
+
+    .side { border-right: 1px solid #3f3f46; }
+    .im-panel { border-left: 1px solid #3f3f46; display: flex; flex-direction: column; min-width: 0; }
+
+    .scene { min-width: 0; height: 100dvh; display: flex; flex-direction: column; }
+
+    .topbar {
+      min-height: 64px;
+      border-bottom: 1px solid #3f3f46;
+      background: #18181bcc;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 10px;
+      padding: 12px 16px;
+      flex-shrink: 0;
+    }
+
+    .title { font-weight: 900; font-size: 20px; }
+    .sub { color: #a1a1aa; font-size: 13px; }
+
+    .panel {
+      border: 1px solid #3f3f46;
+      background: #18181b;
+      border-radius: 22px;
+      padding: 14px;
+      margin-bottom: 12px;
+    }
+
+    .members { display: grid; gap: 8px; }
+
+    .member {
+      display: flex;
+      gap: 10px;
+      align-items: center;
+      padding: 10px;
+      border: 1px solid #3f3f46;
+      border-radius: 18px;
+      background: #09090b;
+    }
+
+    .avatar {
+      width: 40px;
+      height: 40px;
+      min-width: 40px;
+      border-radius: 15px;
+      display: grid;
+      place-items: center;
+      background: #27272a;
+      color: #f4f4f5;
+      font-weight: 900;
+    }
+
+    .stage { flex: 1; overflow: auto; padding: 16px; }
+    .stage-inner { max-width: 860px; margin: 0 auto; display: grid; gap: 14px; }
+
+    .narration {
+      background: #18181b;
+      border: 1px solid #3f3f46;
+      border-radius: 24px;
+      padding: 16px;
+      line-height: 1.8;
+      color: #e4e4e7;
+      overflow-wrap: anywhere;
+      white-space: pre-wrap;
+    }
+
+    .line { display: flex; gap: 10px; align-items: flex-start; max-width: 100%; }
+    .line.me { justify-content: flex-end; }
+
+    .bubble {
+      max-width: min(78%, 640px);
+      background: #27272a;
+      border: 1px solid #3f3f46;
+      border-radius: 20px;
+      padding: 11px 14px;
+      line-height: 1.65;
+      white-space: pre-wrap;
+      overflow-wrap: anywhere;
+      word-break: break-word;
+    }
+
+    .line.me .bubble { background: #f4f4f5; color: #09090b; border-color: #f4f4f5; }
+
+    .action-text {
+      color: #c4b5fd;
+      font-weight: 850;
+    }
+
+    .actions { display: flex; gap: 8px; flex-wrap: wrap; }
+    .action-btn { border-radius: 999px; }
+
+    .composer {
+      border-top: 1px solid #3f3f46;
+      background: #18181bcc;
+      padding: 12px;
+      padding-bottom: calc(12px + env(safe-area-inset-bottom));
+      flex-shrink: 0;
+    }
+
+    .composer-form { max-width: 860px; margin: 0 auto; display: flex; gap: 8px; }
+    .composer-form input { border-radius: 999px; }
+    .send { width: 50px; min-width: 50px; border-radius: 999px; }
+
+    .im-title-row {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 8px;
+      margin-bottom: 10px;
+      flex-shrink: 0;
+    }
+
+    .im-tabs {
+      display: flex;
+      gap: 8px;
+      margin-bottom: 12px;
+      flex-wrap: wrap;
+      flex-shrink: 0;
+    }
+
+    .im-log {
+      flex: 1;
+      overflow: auto;
+      display: grid;
+      gap: 8px;
+      padding-right: 2px;
+      min-height: 180px;
+    }
+
+    .im-row { display: flex; gap: 8px; align-items: flex-start; }
+    .im-row.me { justify-content: flex-end; }
+
+    .im-bubble {
+      max-width: 78%;
+      background: #09090b;
+      border: 1px solid #3f3f46;
+      border-radius: 18px;
+      padding: 9px 11px;
+      line-height: 1.55;
+      overflow-wrap: anywhere;
+      white-space: pre-wrap;
+    }
+
+    .im-row.me .im-bubble { background: #f4f4f5; color: #09090b; border-color: #f4f4f5; }
+    .im-sender { font-size: 12px; color: #a1a1aa; margin-bottom: 3px; }
+
+    .im-compose {
+      display: flex;
+      gap: 8px;
+      padding-top: 10px;
+      flex-shrink: 0;
+    }
+
+    .im-compose input { border-radius: 999px; }
+
+    .error { color: #fecaca; padding: 10px; line-height: 1.5; }
+    .mobile-only { display: none; }
+
+    @media (max-width: 900px) {
+      .app { display: block; }
+      .side { display: none; }
+      .scene { height: 100dvh; }
+      .topbar { position: sticky; top: 0; z-index: 3; }
+      .stage { padding: 12px; }
+      .bubble { max-width: 82vw; }
+      .im-panel {
+        position: fixed;
+        right: 10px;
+        left: 10px;
+        bottom: 84px;
+        height: min(62dvh, 520px);
+        border: 1px solid #3f3f46;
+        border-radius: 22px;
+        z-index: 5;
+        box-shadow: 0 20px 60px #0008;
+      }
+      .im-panel.mobile-hidden { display: none; }
+      .mobile-only { display: inline-flex; }
+    }
+  </style>
+</head>
+<body>
+  <section id="setup" class="setup">
+    <div class="card">
+      <div class="card-head">
+        <h1>场景模式</h1>
+        <p>v0.3：IM 面板可操作，场景动作统一为“(动作)台词”。</p>
+      </div>
+      <form id="setupForm" class="form">
+        <label><span>Endpoint</span><input id="endpoint" value="https://api.deepseek.com" /></label>
+        <label><span>API Key</span><input id="apiKey" type="password" placeholder="sk-..." /></label>
+        <label><span>Model</span><input id="model" value="deepseek-chat" /></label>
+        <button class="btn primary">进入场景</button>
+      </form>
+    </div>
+  </section>
+
+  <section id="app" class="app hide">
+    <aside class="side">
+      <div class="panel">
+        <div class="title">场景设置</div>
+        <p class="sub">feature/scenes · v0.3</p>
+        <label>
+          <span>场景</span>
+          <select id="sceneSelect">
+            <option>宿舍</option>
+            <option>篮球场</option>
+            <option>操场</option>
+            <option>夜宵摊</option>
+            <option>便利店</option>
+            <option>健身房</option>
+            <option>雨天校门口</option>
+          </select>
+        </label>
+        <button id="changeScene" class="btn primary" style="margin-top:10px;width:100%">切换场景</button>
+      </div>
+
+      <div class="panel">
+        <div class="title">同场景的人</div>
+        <div id="members" class="members"></div>
+      </div>
+    </aside>
+
+    <main class="scene">
+      <header class="topbar">
+        <div style="min-width:0">
+          <div id="sceneTitle" class="title">宿舍</div>
+          <div class="sub">场景模式 · IM 面板可独立聊天</div>
+        </div>
+        <div style="display:flex;gap:8px;flex-wrap:wrap;justify-content:flex-end">
+          <button id="mobileImBtn" class="btn mobile-only">IM</button>
+          <button id="resetScene" class="btn">重开</button>
+          <button id="resetConfig" class="btn">配置</button>
+        </div>
+      </header>
+
+      <section class="stage">
+        <div class="stage-inner">
+          <div id="intro" class="narration"></div>
+          <div id="log"></div>
+          <div id="quickActions" class="actions"></div>
+          <div id="error" class="error hide"></div>
+        </div>
+      </section>
+
+      <footer class="composer">
+        <form id="sceneForm" class="composer-form">
+          <input id="sceneInput" placeholder="输入你在场景里的话或动作，比如：我靠在门口说今天累死了" autocomplete="off" />
+          <button class="btn primary send">➤</button>
+        </form>
+      </footer>
+    </main>
+
+    <aside id="imPanel" class="im-panel mobile-hidden">
+      <div class="im-title-row">
+        <div>
+          <div id="imTitle" class="title">群聊</div>
+          <div class="sub">IM 和场景独立，但共享同一批体育生</div>
+        </div>
+        <button id="closeMobileIm" class="btn mobile-only">收起</button>
+      </div>
+      <div id="imTabs" class="im-tabs"></div>
+      <div id="imLog" class="im-log"></div>
+      <form id="imForm" class="im-compose">
+        <input id="imInput" placeholder="发 IM 消息..." autocomplete="off" />
+        <button class="btn primary send">➤</button>
+      </form>
+    </aside>
+  </section>
+
+  <script>
+    const CONFIG_KEY = 'sports-bros-scene-config-v03';
+    const STATE_KEY = 'sports-bros-scene-state-v03';
+
+    const members = [
+      { id: 'group', name: '群聊', tag: '场景群', avatar: '群' },
+      { id: 'zhouye', name: '周野', tag: '篮球队', avatar: '周', prompt: '周野，18岁，篮球队，外向主心骨。说话直接，爱喊人，兄弟感强。' },
+      { id: 'chenxiao', name: '陈骁', tag: '足球队', avatar: '陈', prompt: '陈骁，18岁，足球队，嘴欠损友，起哄接梗快。' },
+      { id: 'linchuan', name: '林川', tag: '田径队', avatar: '林', prompt: '林川，18岁，田径队，话少行动派，关心直接。' },
+      { id: 'zhaokai', name: '赵恺', tag: '健身', avatar: '赵', prompt: '赵恺，18岁，健身，自律，催吃饭喝水睡觉。' },
+      { id: 'ahang', name: '阿航', tag: '游泳队', avatar: '航', prompt: '阿航，18岁，游泳队，阳光话多，气氛组。' }
+    ];
+
+    const agentMembers = members.filter(member => member.id !== 'group');
+
+    let config = null;
+    let activeIm = 'group';
+    let state = {
+      scene: '宿舍',
+      sceneLog: [],
+      quick: ['(起身)看看你在干什么？', '(靠在椅背上)说今天累死了', '(拿起手机)问他们要不要吃夜宵', '(看向林川)让他陪你下楼走走'],
+      im: {
+        group: [
+          { role: 'assistant', sender: '周野', text: '走啊，别在宿舍长蘑菇。', ts: Date.now() },
+          { role: 'assistant', sender: '陈骁', text: '他今天看着像被训练榨干了。', ts: Date.now() },
+          { role: 'assistant', sender: '阿航', text: '那更得出去吃点东西。', ts: Date.now() }
+        ],
+        zhouye: [{ role: 'assistant', sender: '周野', text: '有事直接说。', ts: Date.now() }],
+        chenxiao: [{ role: 'assistant', sender: '陈骁', text: '咋了，又找我唠？', ts: Date.now() }],
+        linchuan: [{ role: 'assistant', sender: '林川', text: '嗯，我在。', ts: Date.now() }],
+        zhaokai: [{ role: 'assistant', sender: '赵恺', text: '先问一句，吃饭没。', ts: Date.now() }],
+        ahang: [{ role: 'assistant', sender: '阿航', text: '你来得正好，我刚想找人说话。', ts: Date.now() }]
+      }
+    };
+
+    function $(selector) { return document.querySelector(selector); }
+
+    function escapeHtml(value) {
+      return String(value || '')
+        .replaceAll('&', '&amp;')
+        .replaceAll('<', '&lt;')
+        .replaceAll('>', '&gt;')
+        .replaceAll('"', '&quot;');
+    }
+
+    function saveState() {
+      localStorage.setItem(STATE_KEY, JSON.stringify(state));
+    }
+
+    function normalizeEndpoint(endpoint) {
+      const trimmed = endpoint.trim().replace(/\/$/, '');
+      if (trimmed.endsWith('/chat/completions')) return trimmed;
+      if (trimmed.endsWith('/v1')) return `${trimmed}/chat/completions`;
+      return `${trimmed}/v1/chat/completions`;
+    }
+
+    async function callLLM(messages, temperature = 0.9) {
+      const response = await fetch(normalizeEndpoint(config.endpoint), {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          Authorization: `Bearer ${config.key}`
+        },
+        body: JSON.stringify({
+          model: config.model,
+          messages,
+          temperature,
+          stream: false
+        })
+      });
+
+      const text = await response.text();
+      let data = {};
+      try { data = JSON.parse(text); } catch {}
+      if (!response.ok) throw new Error((data.error && data.error.message) || text || `HTTP ${response.status}`);
+      return data.choices[0].message.content.trim();
+    }
+
+    function sceneSystemPrompt() {
+      return `你是场景模式总控 Scene Agent。当前场景：${state.scene}。
+用户和五个18岁成年直男体育生兄弟处在同一个现实场景里：周野篮球队、陈骁足球队、林川田径队、赵恺健身、阿航游泳队。
+
+输出内容：
+1. 一段简短场景描写。
+2. 2 到 4 条体育生反应。
+3. 3 到 5 个快捷行为选项。
+
+最重要的格式规则：
+- 体育生反应必须是：名字：(动作)台词
+- 动作必须用英文半角括号包住，例如：周野：(起身)看看你在干什么？
+- 快捷行为也必须是：(动作)台词
+- 不要写成“周野起身说：...”
+- 不要写成小说长段。
+- 不替用户行动。
+- 保持兄弟关系，不乙游，不霸总。
+
+输出格式严格如下：
+场景：...
+周野：(动作)台词
+陈骁：(动作)台词
+林川：(动作)台词
+快捷：(动作)选项1｜(动作)选项2｜(动作)选项3`;
+    }
+
+    function imSystemPrompt(threadId) {
+      if (threadId === 'group') {
+        return `你在模拟中文 IM 群聊。群里有周野、陈骁、林川、赵恺、阿航，都是18岁成年体育生兄弟。
+每次回复2到4条，格式：角色名：消息。
+像真实 IM 群聊，短句，兄弟感，可以互相插话，不写场景动作。`;
+      }
+      const agent = members.find(member => member.id === threadId);
+      return `${agent.prompt}
+当前是你和用户的一对一 IM 私聊。
+回复1到4句，短句，像真实聊天。
+不要输出“${agent.name}：”前缀。`;
+    }
+
+    function introText() {
+      const map = {
+        '宿舍': '宿舍灯开着，桌上摊着外卖袋和几瓶水。周野靠在椅背上刷手机，陈骁在旁边嘴碎，林川坐在床边系鞋带，赵恺把水杯放到桌上，阿航趴在椅背上问今晚还出不出去。',
+        '篮球场': '篮球场的灯亮着，地面还有点热气。周野抱着球站在三分线外，陈骁在旁边拿脚尖拨球，林川靠着栏杆，赵恺在拉伸，阿航蹲在边上系鞋带。',
+        '操场': '操场风有点大，跑道边的人三三两两散着。林川低头看秒表，赵恺拧开水瓶，周野喊人别磨蹭，陈骁嘴上嫌累，阿航已经开始热身。',
+        '夜宵摊': '夜宵摊热气往上冒，塑料凳有点晃。陈骁拿筷子敲碗，周野在看菜单，赵恺嘴上说少吃点，阿航已经开始点串，林川安静坐在旁边。',
+        '便利店': '便利店冷气很足，货架灯白得晃眼。阿航在冰柜前挑饮料，赵恺看配料表，陈骁拿着关东煮，周野催人快点，林川站在门口等。',
+        '健身房': '健身房里器械声和音乐混在一起。赵恺在调重量，周野靠在旁边看你动作，陈骁嘴上说练不动，阿航拿着毛巾乱晃，林川在跑步机旁边站着。',
+        '雨天校门口': '校门口雨声很密，路灯把水洼照得发亮。林川撑着伞站在边上，周野把外套帽子拉起来，陈骁抱怨鞋湿了，赵恺看手机叫车，阿航问要不要先去便利店躲雨。'
+      };
+      return map[state.scene] || map['宿舍'];
+    }
+
+    function ensureActionFormat(text) {
+      const trimmed = String(text || '').trim();
+      if (/^\(.+?\)/.test(trimmed)) return trimmed;
+      if (/^（.+?）/.test(trimmed)) return trimmed.replace(/^（(.+?)）/, '($1)');
+      return `(看过来)${trimmed}`;
+    }
+
+    function renderSceneText(text) {
+      const match = String(text || '').match(/^(\(.+?\))(.*)$/);
+      if (!match) return escapeHtml(text);
+      return `<span class="action-text">${escapeHtml(match[1])}</span>${escapeHtml(match[2])}`;
+    }
+
+    function render() {
+      const hasConfig = !!config;
+      $('#setup').classList.toggle('hide', hasConfig);
+      $('#app').classList.toggle('hide', !hasConfig);
+      if (!hasConfig) return;
+
+      $('#sceneTitle').textContent = state.scene;
+      $('#sceneSelect').value = state.scene;
+      $('#intro').textContent = introText();
+
+      $('#members').innerHTML = agentMembers.map(member => `
+        <div class="member">
+          <div class="avatar">${escapeHtml(member.avatar)}</div>
+          <div>
+            <b>${escapeHtml(member.name)}</b>
+            <div class="sub">${escapeHtml(member.tag)}</div>
+          </div>
+        </div>
+      `).join('');
+
+      $('#log').innerHTML = state.sceneLog.map(item => {
+        if (item.role === 'me') return `<div class="line me"><div class="bubble">${renderSceneText(item.text)}</div></div>`;
+        if (item.role === 'scene') return `<div class="narration">${escapeHtml(item.text)}</div>`;
+        return `
+          <div class="line">
+            <div class="avatar">${escapeHtml(item.name.slice(0, 1))}</div>
+            <div class="bubble"><b>${escapeHtml(item.name)}</b><br>${renderSceneText(item.text)}</div>
+          </div>
+        `;
+      }).join('');
+
+      $('#quickActions').innerHTML = state.quick.map(action => `
+        <button class="btn action-btn" data-action="${escapeHtml(action)}">${escapeHtml(action)}</button>
+      `).join('');
+      document.querySelectorAll('[data-action]').forEach(button => {
+        button.onclick = () => sendSceneAction(button.dataset.action);
+      });
+
+      renderIm();
+    }
+
+    function renderIm() {
+      const current = members.find(member => member.id === activeIm);
+      $('#imTitle').textContent = current.name;
+      $('#imTabs').innerHTML = members.map(member => `
+        <button class="btn ${member.id === activeIm ? 'active' : ''}" data-im="${member.id}">${escapeHtml(member.name)}</button>
+      `).join('');
+      document.querySelectorAll('[data-im]').forEach(button => {
+        button.onclick = () => {
+          activeIm = button.dataset.im;
+          renderIm();
+        };
+      });
+
+      const messages = state.im[activeIm] || [];
+      $('#imLog').innerHTML = messages.map(message => {
+        const isUser = message.role === 'user';
+        return `
+          <div class="im-row ${isUser ? 'me' : ''}">
+            ${isUser ? '' : `<div class="avatar">${escapeHtml(message.sender.slice(0, 1))}</div>`}
+            <div class="im-bubble">
+              ${isUser ? '' : `<div class="im-sender">${escapeHtml(message.sender)}</div>`}
+              ${escapeHtml(message.text)}
+            </div>
+          </div>
+        `;
+      }).join('');
+      $('#imLog').scrollTop = $('#imLog').scrollHeight;
+    }
+
+    function parseSceneReply(raw) {
+      const lines = raw.split(/\n+/).map(line => line.trim()).filter(Boolean);
+      const nextQuick = [];
+      const names = new Set(agentMembers.map(member => member.name));
+
+      lines.forEach(line => {
+        if (line.startsWith('场景')) {
+          state.sceneLog.push({ role: 'scene', text: line.replace(/^场景[:：]/, '').trim() });
+          return;
+        }
+        if (line.startsWith('快捷')) {
+          line.replace(/^快捷[:：]/, '')
+            .split(/[｜|]/)
+            .map(item => ensureActionFormat(item.trim()))
+            .filter(Boolean)
+            .forEach(item => nextQuick.push(item));
+          return;
+        }
+        const match = line.match(/^([^：:]{1,8})[：:](.+)$/);
+        if (match && names.has(match[1].trim())) {
+          state.sceneLog.push({ role: 'agent', name: match[1].trim(), text: ensureActionFormat(match[2].trim()) });
+        }
+      });
+
+      if (nextQuick.length) state.quick = nextQuick.slice(0, 5);
+    }
+
+    function parseGroupImReply(raw) {
+      const names = new Set(agentMembers.map(member => member.name));
+      const parsed = [];
+      raw.split(/\n+/).forEach(line => {
+        const match = line.trim().match(/^([^：:]{1,8})[：:](.+)$/);
+        if (match && names.has(match[1].trim())) {
+          parsed.push({ sender: match[1].trim(), text: match[2].trim() });
+        }
+      });
+      return parsed.length ? parsed : [{ sender: '周野', text: raw.slice(0, 220) }];
+    }
+
+    function showError(message) {
+      $('#error').textContent = message || '';
+      $('#error').classList.toggle('hide', !message);
+    }
+
+    async function sendSceneAction(text) {
+      if (!text || !config) return;
+      showError('');
+      state.sceneLog.push({ role: 'me', text: ensureActionFormat(text) });
+      saveState();
+      render();
+
+      try {
+        const recent = state.sceneLog.slice(-12).map(item => ({
+          role: item.role === 'me' ? 'user' : 'assistant',
+          content: item.role === 'me' ? item.text : (item.name ? `${item.name}：${item.text}` : item.text)
+        }));
+        const raw = await callLLM([
+          { role: 'system', content: sceneSystemPrompt() },
+          ...recent,
+          { role: 'user', content: text }
+        ], 0.92);
+        parseSceneReply(raw);
+        saveState();
+        render();
+      } catch (error) {
+        showError(error.message || '请求失败');
+      }
+    }
+
+    async function sendImMessage(text) {
+      if (!text || !config) return;
+      showError('');
+      if (!state.im[activeIm]) state.im[activeIm] = [];
+      state.im[activeIm].push({ role: 'user', sender: '我', text, ts: Date.now() });
+      saveState();
+      renderIm();
+
+      try {
+        const recent = state.im[activeIm].slice(-16).map(message => ({
+          role: message.role === 'user' ? 'user' : 'assistant',
+          content: `${message.sender}：${message.text}`
+        }));
+        const raw = await callLLM([
+          { role: 'system', content: imSystemPrompt(activeIm) },
+          ...recent,
+          { role: 'user', content: text }
+        ], activeIm === 'group' ? 0.9 : 0.85);
+
+        if (activeIm === 'group') {
+          parseGroupImReply(raw).forEach(reply => {
+            state.im.group.push({ role: 'assistant', sender: reply.sender, text: reply.text, ts: Date.now() });
+          });
+        } else {
+          const current = members.find(member => member.id === activeIm);
+          state.im[activeIm].push({ role: 'assistant', sender: current.name, text: raw, ts: Date.now() });
+        }
+        saveState();
+        renderIm();
+      } catch (error) {
+        showError(error.message || 'IM 请求失败');
+      }
+    }
+
+    function init() {
+      try {
+        config = JSON.parse(localStorage.getItem(CONFIG_KEY) || 'null');
+        const saved = JSON.parse(localStorage.getItem(STATE_KEY) || 'null');
+        if (saved) state = { ...state, ...saved, im: { ...state.im, ...(saved.im || {}) } };
+      } catch {}
+
+      $('#setupForm').onsubmit = event => {
+        event.preventDefault();
+        config = {
+          endpoint: $('#endpoint').value.trim(),
+          key: $('#apiKey').value.trim(),
+          model: $('#model').value.trim()
+        };
+        localStorage.setItem(CONFIG_KEY, JSON.stringify(config));
+        render();
+      };
+
+      $('#sceneForm').onsubmit = event => {
+        event.preventDefault();
+        const value = $('#sceneInput').value.trim();
+        $('#sceneInput').value = '';
+        sendSceneAction(value);
+      };
+
+      $('#imForm').onsubmit = event => {
+        event.preventDefault();
+        const value = $('#imInput').value.trim();
+        $('#imInput').value = '';
+        sendImMessage(value);
+      };
+
+      $('#changeScene').onclick = () => {
+        state.scene = $('#sceneSelect').value;
+        state.sceneLog.push({ role: 'scene', text: `场景切换到：${state.scene}` });
+        saveState();
+        render();
+      };
+
+      $('#resetScene').onclick = () => {
+        state.sceneLog = [];
+        saveState();
+        render();
+      };
+
+      $('#resetConfig').onclick = () => {
+        localStorage.removeItem(CONFIG_KEY);
+        config = null;
+        render();
+      };
+
+      $('#mobileImBtn').onclick = () => $('#imPanel').classList.toggle('mobile-hidden');
+      $('#closeMobileIm').onclick = () => $('#imPanel').classList.add('mobile-hidden');
+
+      render();
+    }
+
+    init();
+  </script>
+</body>
+</html>
