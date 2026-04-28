@@ -1,0 +1,479 @@
+<!doctype html>
+<html lang="zh-CN">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover" />
+  <title>场景模式 v1.0 向导</title>
+  <style>
+    * { box-sizing: border-box; }
+    html, body {
+      margin: 0;
+      width: 100%;
+      min-height: 100%;
+      background: #0f0f12;
+      color: #f4f4f5;
+      font-family: -apple-system, BlinkMacSystemFont, "PingFang SC", "Microsoft YaHei", system-ui, sans-serif;
+      overflow-y: auto;
+    }
+    body.in-frame { overflow: hidden; }
+    button, input, textarea, select { font: inherit; }
+    .hide { display: none !important; }
+    .page {
+      min-height: 100dvh;
+      padding: calc(14px + env(safe-area-inset-top)) 12px calc(132px + env(safe-area-inset-bottom));
+      background: radial-gradient(circle at 50% 0%, #27272a 0, transparent 30%), #0f0f12;
+    }
+    .wrap { width: 100%; max-width: 880px; margin: 0 auto; display: grid; gap: 14px; }
+    .top {
+      display: flex;
+      justify-content: space-between;
+      align-items: flex-start;
+      gap: 12px;
+      padding: 4px 2px;
+    }
+    .title { font-size: 22px; font-weight: 950; letter-spacing: .02em; }
+    .sub { color: #a1a1aa; font-size: 13px; line-height: 1.5; margin-top: 4px; }
+    .btn {
+      border: 1px solid #3f3f46;
+      background: #27272a;
+      color: #f4f4f5;
+      border-radius: 16px;
+      padding: 10px 14px;
+      font-weight: 850;
+      cursor: pointer;
+      white-space: nowrap;
+    }
+    .btn.primary { background: #f4f4f5; color: #09090b; border-color: #f4f4f5; }
+    .btn.ghost { background: transparent; }
+    .btn:active { transform: scale(.98); }
+    .chat {
+      border: 1px solid #27272a;
+      background: #111114;
+      border-radius: 28px;
+      padding: 14px;
+      display: grid;
+      gap: 12px;
+    }
+    .msg { display: flex; gap: 10px; align-items: flex-start; }
+    .msg.user { justify-content: flex-end; }
+    .avatar {
+      width: 38px;
+      height: 38px;
+      min-width: 38px;
+      border-radius: 14px;
+      background: #27272a;
+      display: grid;
+      place-items: center;
+      font-weight: 950;
+    }
+    .bubble {
+      max-width: min(720px, 78vw);
+      border: 1px solid #3f3f46;
+      background: #18181b;
+      border-radius: 22px;
+      padding: 12px 14px;
+      line-height: 1.65;
+      white-space: pre-wrap;
+      overflow-wrap: anywhere;
+    }
+    .msg.user .bubble { background: #f4f4f5; color: #09090b; border-color: #f4f4f5; }
+    .hint-row { display: flex; gap: 8px; flex-wrap: wrap; justify-content: center; }
+    .chip {
+      border: 1px solid #3f3f46;
+      background: #18181b;
+      color: #d4d4d8;
+      border-radius: 999px;
+      padding: 8px 11px;
+      font-size: 13px;
+      cursor: pointer;
+    }
+    .card {
+      border: 1px solid #3f3f46;
+      background: #18181b;
+      border-radius: 26px;
+      padding: 16px;
+      display: grid;
+      gap: 12px;
+      box-shadow: 0 20px 60px #0004;
+    }
+    .card-head {
+      display: flex;
+      justify-content: space-between;
+      align-items: flex-start;
+      gap: 10px;
+      border-bottom: 1px solid #27272a;
+      padding-bottom: 12px;
+    }
+    .card-head h2 { margin: 0; font-size: 21px; }
+    .card-head p { margin: 6px 0 0; color: #a1a1aa; line-height: 1.45; font-size: 13px; }
+    .grid { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 10px; }
+    .item {
+      border: 1px solid #3f3f46;
+      background: #09090b;
+      border-radius: 18px;
+      padding: 12px;
+      cursor: pointer;
+      min-height: 74px;
+    }
+    .item.wide { grid-column: 1 / -1; }
+    .label { color: #a1a1aa; font-size: 12px; font-weight: 850; margin-bottom: 7px; }
+    .value { line-height: 1.55; white-space: pre-wrap; overflow-wrap: anywhere; }
+    .tags { display: flex; gap: 7px; flex-wrap: wrap; }
+    .tag { border: 1px solid #3f3f46; border-radius: 999px; padding: 5px 9px; background: #18181b; font-size: 12px; }
+    .actions { display: flex; gap: 10px; justify-content: center; flex-wrap: wrap; }
+    .composer {
+      position: fixed;
+      left: 0;
+      right: 0;
+      bottom: 0;
+      padding: 10px 12px calc(10px + env(safe-area-inset-bottom));
+      background: linear-gradient(to top, #0f0f12 78%, #0f0f1200);
+      z-index: 5;
+    }
+    .composer-inner {
+      width: 100%;
+      max-width: 880px;
+      margin: 0 auto;
+      display: grid;
+      gap: 8px;
+    }
+    .composer form {
+      display: flex;
+      gap: 8px;
+      align-items: center;
+      border: 1px solid #3f3f46;
+      background: #18181b;
+      border-radius: 999px;
+      padding: 8px;
+      box-shadow: 0 14px 40px #0008;
+    }
+    .composer input {
+      flex: 1;
+      min-width: 0;
+      border: 0;
+      background: transparent;
+      color: #fff;
+      outline: 0;
+      padding: 10px 12px;
+    }
+    .send {
+      width: 46px;
+      height: 46px;
+      min-width: 46px;
+      border-radius: 999px;
+      border: 1px solid #f4f4f5;
+      background: #f4f4f5;
+      color: #09090b;
+      font-size: 25px;
+      font-weight: 900;
+      cursor: pointer;
+    }
+    .composer-actions { display: flex; gap: 8px; justify-content: center; flex-wrap: wrap; }
+    .mask {
+      position: fixed;
+      inset: 0;
+      background: #0008;
+      z-index: 20;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      padding: 14px;
+    }
+    .modal {
+      width: 100%;
+      max-width: 560px;
+      max-height: 88dvh;
+      overflow: auto;
+      background: #18181b;
+      border: 1px solid #3f3f46;
+      border-radius: 24px;
+      padding: 16px;
+      display: grid;
+      gap: 12px;
+    }
+    .modal h3 { margin: 0; }
+    .modal textarea, .modal select {
+      width: 100%;
+      border: 1px solid #3f3f46;
+      background: #09090b;
+      color: #fff;
+      border-radius: 16px;
+      padding: 12px;
+      outline: 0;
+    }
+    .modal textarea { min-height: 150px; resize: vertical; }
+    .frame { position: fixed; inset: 0; width: 100vw; height: 100dvh; background: #0f0f12; z-index: 50; }
+    iframe { width: 100%; height: 100%; border: 0; display: block; }
+    .loading { opacity: .7; pointer-events: none; }
+    @media (max-width: 720px) {
+      .grid { grid-template-columns: 1fr; }
+      .card-head { display: grid; }
+      .title { font-size: 20px; }
+      .chat { padding: 10px; border-radius: 24px; }
+      .bubble { max-width: 80vw; }
+    }
+  </style>
+</head>
+<body>
+  <main id="page" class="page">
+    <div class="wrap">
+      <header class="top">
+        <div>
+          <div class="title">入口向导</div>
+          <div class="sub">先对话确认需求，再生成配置。生成后仍可继续对话修改。</div>
+        </div>
+        <button id="direct" class="btn ghost" type="button">直接进入场景</button>
+      </header>
+
+      <section id="chat" class="chat"></section>
+
+      <div class="hint-row" id="hints">
+        <button class="chip" data-text="我今天有点烦，想要宿舍里有人接住我，但别太温柔。">今晚状态</button>
+        <button class="chip" data-text="先问我几个问题，再帮我生成配置。">先问问题</button>
+        <button class="chip" data-text="我想要更粗粝一点的兄弟感。">兄弟感</button>
+      </div>
+
+      <section id="card" class="card hide"></section>
+    </div>
+  </main>
+
+  <div class="composer">
+    <div class="composer-inner">
+      <form id="guideForm">
+        <input id="guideInput" autocomplete="off" />
+        <button id="send" class="send">›</button>
+      </form>
+      <div class="composer-actions">
+        <button id="generateBtn" class="btn primary" type="button">生成配置</button>
+        <button id="resetBtn" class="btn" type="button">重新开始</button>
+      </div>
+    </div>
+  </div>
+
+  <div id="editMask" class="mask hide">
+    <div class="modal">
+      <h3 id="editTitle"></h3>
+      <div id="editBody"></div>
+      <div class="actions">
+        <button id="cancel" class="btn" type="button">取消</button>
+        <button id="save" class="btn primary" type="button">保存</button>
+      </div>
+    </div>
+  </div>
+
+  <section id="frame" class="frame hide"><iframe id="sceneFrame" src="about:blank"></iframe></section>
+
+  <script>
+    const CONFIG_KEY = 'sports-bros-scene-config-v04';
+    const STATE_KEY = 'sports-bros-scene-state-v04';
+    const CUSTOM_KEY = 'sports-bros-scene-custom-v10';
+    const CHAT_KEY = 'sports-bros-guide-chat-v10';
+    const agentNames = { zhouye: '周野', chenxiao: '陈骁', linchuan: '林川', zhaokai: '赵恺', ahang: '阿航' };
+    const labels = {
+      mode: { safe: '普通', coarse: '粗口', suggestive: '暗示', nsfw: '成人' },
+      intensity: { soft: '低', medium: '中', explicit: '高' },
+      relationshipTone: { brother: '兄弟', rough_bro: '粗粝兄弟', teasing: '嘴欠调侃', direct: '直接推进' }
+    };
+    let guideMessages = [];
+    let plan = null;
+    let editingField = null;
+
+    function $(s) { return document.querySelector(s); }
+    function esc(v) { return String(v || '').replaceAll('&','&amp;').replaceAll('<','&lt;').replaceAll('>','&gt;').replaceAll('"','&quot;'); }
+    function getConfig() {
+      try { return JSON.parse(localStorage.getItem(CONFIG_KEY) || localStorage.getItem('sports-bros-api-config') || 'null'); } catch { return null; }
+    }
+    function endpoint(url) {
+      const u = (url || 'https://api.deepseek.com').trim().replace(/\/$/, '');
+      if (u.endsWith('/chat/completions')) return u;
+      if (u.endsWith('/v1')) return u + '/chat/completions';
+      return u + '/v1/chat/completions';
+    }
+    function systemPrompt(mode) {
+      if (mode === 'config') {
+        return `你是场景入口的高级向导 Agent。你已经通过前面对话了解用户需求，现在需要生成或更新完整配置。语气平淡、礼貌、稳定，使用“您”。只输出 JSON，不要 Markdown。字段：reply,title,scene,mode(safe/coarse/suggestive/nsfw),intensity(soft/medium/explicit),relationshipTone(brother/rough_bro/teasing/direct),atmosphere数组,participants数组(zhouye/chenxiao/linchuan/zhaokai/ahang),intro,scenePrompt,agentOverrides对象,quick数组,boundaries数组。所有角色均为18岁成年人；保持直男体育生兄弟关系基调；quick 必须是英文半角括号动作格式。`;
+      }
+      return `你是场景入口的高级向导 Agent。你的工作是先通过自然对话了解用户今天想要的状态、场景、氛围、角色参与、强度和边界。语气平淡、礼貌、稳定，必须使用“您”称呼用户。像私人服务人员，不撒娇，不卖萌，不乙游。不要直接生成配置，除非用户明确要求生成；每次最多问1到2个关键问题。回复只输出普通文本。`;
+    }
+    async function callLLM(mode, userText) {
+      const cfg = getConfig();
+      if (!cfg || !cfg.key) throw new Error('缺少 API 配置，请先从 AES 入口解锁。');
+      const context = guideMessages.map(m => ({ role: m.role === 'guide' ? 'assistant' : 'user', content: m.content }));
+      const userContent = mode === 'config'
+        ? `请根据以下对话生成完整配置。${plan ? '\n当前配置：' + JSON.stringify(plan) : ''}\n最新要求：${userText || '生成配置'}`
+        : userText;
+      const res = await fetch(endpoint(cfg.endpoint), {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json', Authorization: `Bearer ${cfg.key}` },
+        body: JSON.stringify({ model: cfg.model || 'deepseek-chat', messages: [{ role:'system', content: systemPrompt(mode) }, ...context, { role:'user', content: userContent }], temperature: 0.68, stream: false })
+      });
+      const raw = await res.text();
+      let data = {};
+      try { data = JSON.parse(raw); } catch {}
+      if (!res.ok) throw new Error((data.error && data.error.message) || raw);
+      return data.choices[0].message.content.trim();
+    }
+    function parseJson(text) {
+      const clean = String(text || '').replace(/^```json/i,'').replace(/```$/i,'').trim();
+      try { return JSON.parse(clean); } catch {}
+      const m = clean.match(/\{[\s\S]*\}/);
+      if (m) return JSON.parse(m[0]);
+      throw new Error('向导返回格式不对');
+    }
+    function ensureAction(x) {
+      const t = String(x || '').trim();
+      if (/^\(.+?\)/.test(t)) return t;
+      if (/^（.+?）/.test(t)) return t.replace(/^（(.+?)）/, '($1)');
+      return `(看过去)${t}`;
+    }
+    function fallback(text) {
+      const adult = /黄|成人|nsfw|下流|直接|炒菜|色色|性/.test(text || guideMessages.map(m => m.content).join('\n'));
+      return {
+        reply: '配置已生成。请您确认以下内容；如果需要调整，可以继续在下方输入。',
+        title: '夜里宿舍', scene: '宿舍', mode: adult ? 'nsfw' : 'coarse', intensity: adult ? 'explicit' : 'medium', relationshipTone: 'rough_bro',
+        atmosphere: ['夜晚','直接','粗粝','低灯光'], participants: ['zhouye','chenxiao','linchuan','zhaokai','ahang'],
+        intro: '宿舍灯光压得很低，窗外的声音被隔在门外。几个人都在，周野靠着椅背看过来，陈骁嘴角带着点欠，林川安静坐在床边，赵恺把水杯推近，阿航趴在椅背上等您开口。',
+        scenePrompt: `根据向导对话生成。保持直男体育生兄弟关系基调，少旁白，多动作，多口语。`,
+        agentOverrides: { zhouye:'主动推进', chenxiao:'嘴欠起哄', linchuan:'话少直接', zhaokai:'稳定压住边界', ahang:'热闹带气氛' },
+        quick: ['(坐到床边)看他们在干什么','(靠着门)让他们别装','(拿起水瓶)问今晚谁先来'],
+        boundaries: ['所有角色均为18岁成年人','保持直男体育生兄弟关系基调','您可以随时降级或退出']
+      };
+    }
+    function normalize(p, text) {
+      const f = fallback(text);
+      const participants = Array.isArray(p.participants) ? p.participants.filter(id => agentNames[id]) : f.participants;
+      return {
+        reply: p.reply || f.reply, title: p.title || p.scene || f.title, scene: p.scene || p.title || f.scene,
+        mode: labels.mode[p.mode] ? p.mode : f.mode, intensity: labels.intensity[p.intensity] ? p.intensity : f.intensity,
+        relationshipTone: labels.relationshipTone[p.relationshipTone] ? p.relationshipTone : f.relationshipTone,
+        atmosphere: Array.isArray(p.atmosphere) && p.atmosphere.length ? p.atmosphere.slice(0,8) : f.atmosphere,
+        participants: participants.length ? participants : f.participants,
+        intro: p.intro || f.intro, scenePrompt: p.scenePrompt || p.systemPrompt || f.scenePrompt,
+        agentOverrides: { ...f.agentOverrides, ...(p.agentOverrides || {}) },
+        quick: Array.isArray(p.quick) && p.quick.length ? p.quick.map(ensureAction).slice(0,5) : f.quick,
+        boundaries: Array.isArray(p.boundaries) && p.boundaries.length ? p.boundaries.slice(0,8) : f.boundaries
+      };
+    }
+    function saveState() {
+      localStorage.setItem(CHAT_KEY, JSON.stringify(guideMessages));
+      if (plan) localStorage.setItem(CUSTOM_KEY, JSON.stringify(plan));
+    }
+    function addMessage(role, content) {
+      guideMessages.push({ role, content, ts: Date.now() });
+      saveState();
+      renderChat();
+      setTimeout(() => window.scrollTo({ top: document.body.scrollHeight, behavior: 'smooth' }), 50);
+    }
+    function renderChat() {
+      $('#chat').innerHTML = guideMessages.map(m => `<div class="msg ${m.role === 'user' ? 'user' : ''}">${m.role === 'guide' ? '<div class="avatar">向</div>' : ''}<div class="bubble">${esc(m.content)}</div>${m.role === 'user' ? '<div class="avatar">我</div>' : ''}</div>`).join('');
+    }
+    function renderPlan() {
+      if (!plan) return;
+      $('#card').classList.remove('hide');
+      $('#card').innerHTML = `<div class="card-head"><div><h2>配置已生成</h2><p>点击任意项目可修改。继续在底部对话框输入，也会更新配置。</p></div><button class="btn primary" data-enter>进入</button></div><div class="grid">${item('title','标题',plan.title)}${item('scene','场景',plan.scene)}${item('mode','内容模式',labels.mode[plan.mode]||plan.mode)}${item('intensity','强度',labels.intensity[plan.intensity]||plan.intensity)}${item('relationshipTone','关系基调',labels.relationshipTone[plan.relationshipTone]||plan.relationshipTone)}${item('participants','参与角色',plan.participants.map(id=>agentNames[id]).join('、'))}${item('atmosphere','氛围标签',tags(plan.atmosphere),true)}${item('intro','开场描写',plan.intro,true)}${item('scenePrompt','场景规则',plan.scenePrompt,true)}${item('agentOverrides','角色倾向',Object.entries(plan.agentOverrides||{}).map(([id,v])=>`${agentNames[id]||id}：${v}`).join('\n'),true)}${item('quick','快捷行为',plan.quick.join('\n'),true)}${item('boundaries','边界',plan.boundaries.join('\n'),true)}</div><div class="actions"><button class="btn primary" data-enter>进入</button></div>`;
+      document.querySelectorAll('[data-field]').forEach(el => el.onclick = () => openEdit(el.dataset.field));
+      document.querySelectorAll('[data-enter]').forEach(el => el.onclick = () => enterScene(plan));
+      saveState();
+    }
+    function item(field,label,value,wide=false){ return `<div class="item ${wide?'wide':''}" data-field="${field}"><div class="label">${label}</div><div class="value">${value}</div></div>`; }
+    function tags(arr){ return `<div class="tags">${arr.map(x=>`<span class="tag">${esc(x)}</span>`).join('')}</div>`; }
+    function openEdit(field){
+      editingField = field;
+      $('#editTitle').textContent = '修改' + ({title:'标题',scene:'场景',mode:'内容模式',intensity:'强度',relationshipTone:'关系基调',participants:'参与角色',atmosphere:'氛围标签',intro:'开场描写',scenePrompt:'场景规则',agentOverrides:'角色倾向',quick:'快捷行为',boundaries:'边界'}[field] || '配置');
+      $('#editBody').innerHTML = editor(field);
+      $('#editMask').classList.remove('hide');
+    }
+    function editor(field){
+      if (field === 'mode') return select('editValue', plan.mode, labels.mode);
+      if (field === 'intensity') return select('editValue', plan.intensity, labels.intensity);
+      if (field === 'relationshipTone') return select('editValue', plan.relationshipTone, labels.relationshipTone);
+      if (field === 'participants') return `<textarea id="editValue">${esc(plan.participants.join('\n'))}</textarea><div class="sub">可用：zhouye / chenxiao / linchuan / zhaokai / ahang，每行一个。</div>`;
+      if (field === 'agentOverrides') return `<textarea id="editValue">${esc(Object.entries(plan.agentOverrides||{}).map(([id,v])=>`${id}: ${v}`).join('\n'))}</textarea>`;
+      if (Array.isArray(plan[field])) return `<textarea id="editValue">${esc(plan[field].join('\n'))}</textarea><div class="sub">每行一项。</div>`;
+      return `<textarea id="editValue">${esc(plan[field] || '')}</textarea>`;
+    }
+    function select(id, val, opts){ return `<select id="${id}">${Object.entries(opts).map(([k,v])=>`<option value="${k}" ${k===val?'selected':''}>${v}</option>`).join('')}</select>`; }
+    function saveEdit(){
+      const f = editingField;
+      const v = $('#editValue').value;
+      if (['mode','intensity','relationshipTone'].includes(f)) plan[f] = v;
+      else if (f === 'participants') plan[f] = v.split(/\n+/).map(x=>x.trim()).filter(x=>agentNames[x]);
+      else if (f === 'agentOverrides') { const o={}; v.split(/\n+/).forEach(line=>{ const m=line.match(/^([^:：]+)[:：](.+)$/); if(m)o[m[1].trim()]=m[2].trim(); }); plan[f]=o; }
+      else if (Array.isArray(plan[f])) plan[f] = v.split(/\n+/).map(x=>x.trim()).filter(Boolean).map(x=>f==='quick'?ensureAction(x):x);
+      else plan[f] = v.trim();
+      $('#editMask').classList.add('hide');
+      addMessage('guide', '已修改。配置卡已更新。');
+      renderPlan();
+    }
+    async function submitText(text) {
+      if (!text.trim()) return;
+      addMessage('user', text.trim());
+      $('#guideForm').classList.add('loading');
+      try {
+        if (plan) {
+          const raw = await callLLM('config', text.trim());
+          plan = normalize(parseJson(raw), text.trim());
+          addMessage('guide', plan.reply || '已按您的补充更新配置。');
+          renderPlan();
+        } else {
+          const reply = await callLLM('chat', text.trim());
+          addMessage('guide', reply);
+        }
+      } catch (e) {
+        addMessage('guide', e.message || '处理失败。您可以再说一次，或者直接生成配置。');
+      }
+      $('#guideForm').classList.remove('loading');
+    }
+    async function generateConfig() {
+      $('#generateBtn').classList.add('loading');
+      try {
+        const raw = await callLLM('config', '请基于目前对话生成配置。');
+        plan = normalize(parseJson(raw), '生成配置');
+        addMessage('guide', plan.reply || '配置已生成。请您确认。');
+        renderPlan();
+      } catch (e) {
+        plan = fallback('生成配置');
+        addMessage('guide', '我先为您生成一版基础配置。您可以继续对话修改。');
+        renderPlan();
+      }
+      $('#generateBtn').classList.remove('loading');
+    }
+    function baseState(p){
+      const now = Date.now();
+      const empty = { basic: [], family: [], goals: [], habits: [], dislikes: [], weaknesses: [], relationshipWithUser: [], boundaries: [] };
+      return { scene:p.scene, sceneLog:[{role:'scene',text:p.intro}], quick:p.quick, prefs:{name:'我',avatar:'我',avatarUrl:'',edit:false,remarks:{},nsfwGuard:true,autoNSFW:true,proactive:true,notifications:false,deepMode:'auto'}, mode:p.mode, lastActiveAt:now, lastProactiveAt:0, im:{ group:[{id:'g1',role:'assistant',sender:'周野',content:'进来了？那别光站着。',ts:now},{id:'g2',role:'assistant',sender:'陈骁',content:'哟，终于来了。',ts:now},{id:'g3',role:'assistant',sender:'阿航',content:'你先说，今天想去哪儿。',ts:now}], zhouye:[], chenxiao:[], linchuan:[], zhaokai:[], ahang:[], coach:[] }, memory:{user:{profile:[],preferences:[],boundaries:p.boundaries,schedule:[],dislikes:[]},agentProfiles:{zhouye:empty,chenxiao:empty,linchuan:empty,zhaokai:empty,ahang:empty},relationMemory:{zhouye:[],chenxiao:[],linchuan:[],zhaokai:[],ahang:[]}} };
+    }
+    function enterScene(p){
+      if (p) { localStorage.setItem(CUSTOM_KEY, JSON.stringify(p)); localStorage.setItem(STATE_KEY, JSON.stringify(baseState(p))); }
+      document.body.classList.add('in-frame');
+      $('#frame').classList.remove('hide');
+      $('#sceneFrame').src = './scenes-v04.html?v=10-' + Date.now();
+    }
+    function resetAll() {
+      guideMessages = [{ role: 'guide', content: '请先告诉我，您今晚想进入什么状态。我会先问几个必要问题，再为您生成配置。', ts: Date.now() }];
+      plan = null;
+      localStorage.removeItem(CUSTOM_KEY);
+      localStorage.removeItem(CHAT_KEY);
+      $('#card').classList.add('hide');
+      renderChat();
+      saveState();
+    }
+    function init(){
+      try { guideMessages = JSON.parse(localStorage.getItem(CHAT_KEY) || '[]'); } catch {}
+      try { plan = JSON.parse(localStorage.getItem(CUSTOM_KEY) || 'null'); } catch {}
+      if (!guideMessages.length) guideMessages = [{ role: 'guide', content: '请先告诉我，您今晚想进入什么状态。我会先问几个必要问题，再为您生成配置。', ts: Date.now() }];
+      renderChat();
+      if (plan) renderPlan();
+      $('#guideForm').onsubmit = e => { e.preventDefault(); const text = $('#guideInput').value; $('#guideInput').value = ''; submitText(text); };
+      $('#generateBtn').onclick = generateConfig;
+      $('#resetBtn').onclick = resetAll;
+      $('#direct').onclick = () => enterScene(null);
+      $('#cancel').onclick = () => $('#editMask').classList.add('hide');
+      $('#save').onclick = saveEdit;
+      $('#editMask').onclick = e => { if(e.target.id==='editMask') $('#editMask').classList.add('hide'); };
+      document.querySelectorAll('[data-text]').forEach(btn => btn.onclick = () => submitText(btn.dataset.text));
+    }
+    init();
+  </script>
+</body>
+</html>
