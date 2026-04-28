@@ -23,7 +23,7 @@
       width: 100%;
       min-height: 100dvh;
       display: block;
-      padding: calc(22px + env(safe-area-inset-top)) 22px calc(140px + env(safe-area-inset-bottom));
+      padding: calc(22px + env(safe-area-inset-top)) 22px calc(160px + env(safe-area-inset-bottom));
       background:
         radial-gradient(circle at 30% 20%, #27272a 0, transparent 32%),
         radial-gradient(circle at 80% 90%, #18181b 0, transparent 30%),
@@ -79,7 +79,6 @@
       box-shadow: 0 20px 60px #0006;
     }
     .entry-actions { display: grid; place-items: center; gap: 14px; padding-top: 8px; }
-    .row { display: flex; gap: 10px; flex-wrap: wrap; justify-content: center; }
     .quiet { color: #a1a1aa; font-size: 13px; line-height: 1.55; text-align: center; }
     .box {
       border: 1px solid #3f3f46;
@@ -96,7 +95,7 @@
     @media (max-width: 720px) {
       .screen {
         min-height: 100dvh;
-        padding: calc(14px + env(safe-area-inset-top)) 14px calc(180px + env(safe-area-inset-bottom));
+        padding: calc(14px + env(safe-area-inset-top)) 14px calc(220px + env(safe-area-inset-bottom));
       }
       .card {
         margin: 0 auto;
@@ -136,7 +135,7 @@
         <div class="entry-actions">
           <button id="guide" class="circle-btn" type="button">›</button>
           <button id="direct" class="btn" type="button">直接进入场景</button>
-          <div class="quiet">密码只在本机用于解密。公开密文依赖密码强度，请使用强密码。</div>
+          <div class="quiet">圆形按钮进入新版向导。新版向导生成配置后，底部输入框仍可继续补充修改要求。</div>
         </div>
       </div>
     </div>
@@ -209,7 +208,7 @@
 
         $("#sceneFrame").src = mode === "direct"
           ? "./scenes-v04.html?v=aes-direct-" + Date.now()
-          : "./scenes-v06.html?v=aes-guide-" + Date.now();
+          : "./scenes-v09.html?v=aes-guide-" + Date.now();
       } catch (error) {
         setError(error.message || "解锁失败");
       }
