@@ -130,7 +130,7 @@
         <div class="entry-actions">
           <button id="guide" class="circle-btn" type="button">›</button>
           <button id="direct" class="btn" type="button">直接进入场景</button>
-          <div class="quiet">圆形按钮进入对话式向导。您可以通过几轮对话生成配置，生成后继续通过对话修改。</div>
+          <div class="quiet">圆形按钮进入对话式向导。默认“他们”就是五个体育生 Agent。</div>
         </div>
       </div>
     </div>
@@ -193,7 +193,7 @@
         $("#frameWrap").classList.remove("hide");
         $("#sceneFrame").src = mode === "direct"
           ? "./scenes-v04.html?v=aes-direct-" + Date.now()
-          : "./scenes-v10.html?v=aes-guide-" + Date.now();
+          : "./scenes-v11.html?v=aes-guide-" + Date.now();
       } catch (error) {
         setError(error.message || "解锁失败");
       }
