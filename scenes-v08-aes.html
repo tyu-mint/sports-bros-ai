@@ -63,7 +63,6 @@
       cursor: pointer;
       white-space: nowrap;
     }
-    .btn.primary { background: #f4f4f5; color: #09090b; border-color: #f4f4f5; }
     .circle-btn {
       width: 78px;
       height: 78px;
@@ -97,10 +96,7 @@
         min-height: 100dvh;
         padding: calc(14px + env(safe-area-inset-top)) 14px calc(220px + env(safe-area-inset-bottom));
       }
-      .card {
-        margin: 0 auto;
-        border-radius: 24px;
-      }
+      .card { margin: 0 auto; border-radius: 24px; }
       .head { padding: 22px; }
       .head h1 { font-size: 25px; }
       .head p { font-size: 16px; }
@@ -124,7 +120,6 @@
         </div>
 
         <label><span>解锁密码</span><input id="password" type="password" autocomplete="current-password" /></label>
-
         <label><span>Endpoint</span><input id="endpoint" value="https://api.deepseek.com" /></label>
         <label><span>Main Model</span><input id="model" value="deepseek-chat" /></label>
         <label><span>Router Model</span><input id="routerModel" value="deepseek-chat" /></label>
@@ -135,7 +130,7 @@
         <div class="entry-actions">
           <button id="guide" class="circle-btn" type="button">›</button>
           <button id="direct" class="btn" type="button">直接进入场景</button>
-          <div class="quiet">圆形按钮进入新版向导。新版向导生成配置后，底部输入框仍可继续补充修改要求。</div>
+          <div class="quiet">圆形按钮进入对话式向导。您可以通过几轮对话生成配置，生成后继续通过对话修改。</div>
         </div>
       </div>
     </div>
@@ -160,22 +155,15 @@
       "sports-bros-cfg-v060"
     ];
 
-    function $(selector) {
-      return document.querySelector(selector);
-    }
-
-    function setError(text) {
-      $("#error").textContent = text || "";
-    }
+    function $(selector) { return document.querySelector(selector); }
+    function setError(text) { $("#error").textContent = text || ""; }
 
     function decryptKey() {
       const password = $("#password").value;
       if (!password) throw new Error("请输入密码");
       if (!window.CryptoJS) throw new Error("CryptoJS 未加载，请检查网络或 CDN");
-
       const bytes = CryptoJS.AES.decrypt(EMBEDDED_AES_BLOB, password);
       const key = bytes.toString(CryptoJS.enc.Utf8).trim();
-
       if (!key) throw new Error("解锁失败：密码不对或密文格式不匹配");
       return key;
     }
@@ -199,16 +187,13 @@
       try {
         setError("");
         const apiKey = decryptKey();
-        const cfg = buildConfig(apiKey);
-        writeConfig(cfg);
-
+        writeConfig(buildConfig(apiKey));
         document.body.classList.add("in-frame");
         $("#entry").classList.add("hide");
         $("#frameWrap").classList.remove("hide");
-
         $("#sceneFrame").src = mode === "direct"
           ? "./scenes-v04.html?v=aes-direct-" + Date.now()
-          : "./scenes-v09.html?v=aes-guide-" + Date.now();
+          : "./scenes-v10.html?v=aes-guide-" + Date.now();
       } catch (error) {
         setError(error.message || "解锁失败");
       }
