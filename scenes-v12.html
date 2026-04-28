@@ -1,0 +1,773 @@
+<!doctype html>
+<html lang="zh-CN">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover" />
+  <title>入口向导 v1.2</title>
+  <style>
+    * { box-sizing: border-box; }
+    html, body {
+      margin: 0;
+      min-height: 100%;
+      background: #0f0f12;
+      color: #f4f4f5;
+      font-family: -apple-system, BlinkMacSystemFont, "PingFang SC", "Microsoft YaHei", system-ui, sans-serif;
+      overflow-y: auto;
+    }
+    button, input, textarea, select { font: inherit; }
+    .hide { display: none !important; }
+
+    .page {
+      min-height: 100dvh;
+      padding: calc(14px + env(safe-area-inset-top)) 12px calc(142px + env(safe-area-inset-bottom));
+      background: radial-gradient(circle at 50% 0%, #27272a 0, transparent 30%), #0f0f12;
+    }
+    .wrap {
+      max-width: 880px;
+      margin: 0 auto;
+      display: grid;
+      gap: 14px;
+    }
+    .top {
+      display: flex;
+      justify-content: space-between;
+      gap: 12px;
+      align-items: flex-start;
+    }
+    .title { font-size: 22px; font-weight: 950; }
+    .sub {
+      color: #a1a1aa;
+      font-size: 13px;
+      line-height: 1.5;
+      margin-top: 4px;
+    }
+    .btn {
+      border: 1px solid #3f3f46;
+      background: #27272a;
+      color: #f4f4f5;
+      border-radius: 16px;
+      padding: 10px 14px;
+      font-weight: 850;
+      cursor: pointer;
+      white-space: nowrap;
+    }
+    .btn.primary {
+      background: #f4f4f5;
+      color: #09090b;
+      border-color: #f4f4f5;
+    }
+    .btn.ghost { background: transparent; }
+
+    .chat {
+      border: 1px solid #27272a;
+      background: #111114;
+      border-radius: 28px;
+      padding: 12px;
+      display: grid;
+      gap: 12px;
+    }
+    .msg {
+      display: flex;
+      gap: 10px;
+      align-items: flex-start;
+    }
+    .msg.user { justify-content: flex-end; }
+    .avatar {
+      width: 38px;
+      height: 38px;
+      min-width: 38px;
+      border-radius: 14px;
+      background: #27272a;
+      display: grid;
+      place-items: center;
+      font-weight: 950;
+    }
+    .bubble {
+      max-width: min(720px, 78vw);
+      border: 1px solid #3f3f46;
+      background: #18181b;
+      border-radius: 22px;
+      padding: 12px 14px;
+      line-height: 1.65;
+      white-space: pre-wrap;
+      overflow-wrap: anywhere;
+    }
+    .msg.user .bubble {
+      background: #f4f4f5;
+      color: #09090b;
+      border-color: #f4f4f5;
+    }
+
+    .hints {
+      display: flex;
+      gap: 8px;
+      flex-wrap: wrap;
+      justify-content: center;
+    }
+    .chip {
+      border: 1px solid #3f3f46;
+      background: #18181b;
+      color: #d4d4d8;
+      border-radius: 999px;
+      padding: 8px 11px;
+      font-size: 13px;
+      cursor: pointer;
+    }
+
+    .card {
+      border: 1px solid #3f3f46;
+      background: #18181b;
+      border-radius: 26px;
+      padding: 16px;
+      display: grid;
+      gap: 12px;
+      box-shadow: 0 20px 60px #0004;
+    }
+    .card-head {
+      display: flex;
+      justify-content: space-between;
+      align-items: flex-start;
+      gap: 10px;
+      border-bottom: 1px solid #27272a;
+      padding-bottom: 12px;
+    }
+    .card-head h2 {
+      margin: 0;
+      font-size: 21px;
+    }
+    .card-head p {
+      margin: 6px 0 0;
+      color: #a1a1aa;
+      line-height: 1.45;
+      font-size: 13px;
+    }
+    .grid {
+      display: grid;
+      grid-template-columns: repeat(2, minmax(0, 1fr));
+      gap: 10px;
+    }
+    .item {
+      border: 1px solid #3f3f46;
+      background: #09090b;
+      border-radius: 18px;
+      padding: 12px;
+      min-height: 74px;
+    }
+    .item.wide { grid-column: 1 / -1; }
+    .label {
+      color: #a1a1aa;
+      font-size: 12px;
+      font-weight: 850;
+      margin-bottom: 7px;
+    }
+    .value {
+      line-height: 1.55;
+      white-space: pre-wrap;
+      overflow-wrap: anywhere;
+    }
+    .tags {
+      display: flex;
+      gap: 7px;
+      flex-wrap: wrap;
+    }
+    .tag {
+      border: 1px solid #3f3f46;
+      border-radius: 999px;
+      padding: 5px 9px;
+      background: #18181b;
+      font-size: 12px;
+    }
+
+    .scene-page {
+      min-height: 100dvh;
+      padding: calc(14px + env(safe-area-inset-top)) 12px calc(92px + env(safe-area-inset-bottom));
+      background: #0f0f12;
+    }
+    .scene-wrap {
+      max-width: 880px;
+      margin: 0 auto;
+      display: grid;
+      gap: 12px;
+    }
+    .scene-title {
+      position: sticky;
+      top: 0;
+      background: #0f0f12dd;
+      backdrop-filter: blur(12px);
+      padding: 10px 0;
+      z-index: 3;
+      display: flex;
+      justify-content: space-between;
+      gap: 10px;
+      align-items: flex-start;
+    }
+    .scene-card {
+      border: 1px solid #3f3f46;
+      background: #18181b;
+      border-radius: 24px;
+      padding: 14px;
+      line-height: 1.75;
+      white-space: pre-wrap;
+      overflow-wrap: anywhere;
+    }
+    .line {
+      display: flex;
+      gap: 10px;
+      align-items: flex-start;
+    }
+    .line.me { justify-content: flex-end; }
+    .line .bubble { max-width: min(720px, 78vw); }
+
+    .composer {
+      position: fixed;
+      left: 0;
+      right: 0;
+      bottom: 0;
+      padding: 10px 12px calc(10px + env(safe-area-inset-bottom));
+      background: linear-gradient(to top, #0f0f12 78%, #0f0f1200);
+      z-index: 5;
+    }
+    .composer-inner {
+      max-width: 880px;
+      margin: 0 auto;
+      display: grid;
+      gap: 8px;
+    }
+    .composer form {
+      display: flex;
+      gap: 8px;
+      align-items: center;
+      border: 1px solid #3f3f46;
+      background: #18181b;
+      border-radius: 999px;
+      padding: 8px;
+      box-shadow: 0 14px 40px #0008;
+    }
+    .composer input {
+      flex: 1;
+      min-width: 0;
+      border: 0;
+      background: transparent;
+      color: #fff;
+      outline: 0;
+      padding: 10px 12px;
+    }
+    .send {
+      width: 46px;
+      height: 46px;
+      min-width: 46px;
+      border-radius: 999px;
+      border: 1px solid #f4f4f5;
+      background: #f4f4f5;
+      color: #09090b;
+      font-size: 25px;
+      font-weight: 900;
+      cursor: pointer;
+    }
+    .composer-actions {
+      display: flex;
+      gap: 8px;
+      justify-content: center;
+      flex-wrap: wrap;
+    }
+    .loading {
+      opacity: .7;
+      pointer-events: none;
+    }
+
+    @media (max-width: 720px) {
+      .grid { grid-template-columns: 1fr; }
+      .card-head { display: grid; }
+      .title { font-size: 20px; }
+      .chat { padding: 10px; border-radius: 24px; }
+      .bubble { max-width: 80vw; }
+      .scene-title { align-items: flex-start; }
+    }
+  </style>
+</head>
+<body>
+  <main id="guidePage" class="page">
+    <div class="wrap">
+      <header class="top">
+        <div>
+          <div class="title">入口向导</div>
+          <div class="sub">默认“他们”就是五个体育生 Agent。进入场景后，角色必须直接围绕您回应。</div>
+        </div>
+        <button id="direct" class="btn ghost" type="button">直接进入默认场景</button>
+      </header>
+
+      <section id="chat" class="chat"></section>
+
+      <div class="hints">
+        <button class="chip" data-text="我今天有点烦，想要宿舍里有人接住我，但别太温柔。">今晚状态</button>
+        <button class="chip" data-text="我想和他们更直接一点，先问我几个必要问题。">先问问题</button>
+        <button class="chip" data-text="我想要更粗粝一点的兄弟感。">兄弟感</button>
+      </div>
+
+      <section id="card" class="card hide"></section>
+    </div>
+  </main>
+
+  <main id="scenePage" class="scene-page hide">
+    <div class="scene-wrap">
+      <header class="scene-title">
+        <div>
+          <div id="sceneTitle" class="title">场景</div>
+          <div id="sceneSub" class="sub">角色会围绕您的配置直接回应。</div>
+        </div>
+        <button id="backGuide" class="btn" type="button">回配置</button>
+      </header>
+      <div id="sceneIntro" class="scene-card"></div>
+      <div id="sceneLog" class="scene-wrap"></div>
+    </div>
+  </main>
+
+  <div class="composer">
+    <div class="composer-inner">
+      <form id="form">
+        <input id="input" autocomplete="off" />
+        <button class="send">›</button>
+      </form>
+      <div id="guideButtons" class="composer-actions">
+        <button id="generateBtn" class="btn primary" type="button">生成配置</button>
+        <button id="resetBtn" class="btn" type="button">重新开始</button>
+      </div>
+      <div id="sceneButtons" class="composer-actions hide">
+        <button id="sceneStart" class="btn primary" type="button">让他们回应</button>
+        <button id="backGuide2" class="btn" type="button">回到配置</button>
+      </div>
+    </div>
+  </div>
+
+<script>
+const CONFIG_KEY = "sports-bros-scene-config-v04";
+const CUSTOM_KEY = "sports-bros-scene-custom-v12-local";
+const CHAT_KEY = "sports-bros-guide-chat-v12-local";
+const SCENE_KEY = "sports-bros-scene-log-v12-local";
+
+const agentNames = {
+  zhouye: "周野",
+  chenxiao: "陈骁",
+  linchuan: "林川",
+  zhaokai: "赵恺",
+  ahang: "阿航"
+};
+
+const labels = {
+  mode: { safe: "普通", coarse: "粗口", suggestive: "暗示", intense: "高强度" },
+  intensity: { soft: "低", medium: "中", explicit: "高" },
+  relationshipTone: { brother: "兄弟", rough_bro: "粗粝兄弟", teasing: "嘴欠调侃", direct: "直接推进" }
+};
+
+let guideMessages = [];
+let plan = null;
+let sceneMessages = [];
+
+function $(s) { return document.querySelector(s); }
+function esc(v) {
+  return String(v || "")
+    .replaceAll("&", "&amp;")
+    .replaceAll("<", "&lt;")
+    .replaceAll(">", "&gt;")
+    .replaceAll('"', "&quot;");
+}
+
+function getConfig() {
+  try {
+    return JSON.parse(localStorage.getItem(CONFIG_KEY) || localStorage.getItem("sports-bros-api-config") || "null");
+  } catch {
+    return null;
+  }
+}
+
+function endpoint(url) {
+  const u = (url || "https://api.deepseek.com").trim().replace(/\/$/, "");
+  if (u.endsWith("/chat/completions")) return u;
+  if (u.endsWith("/v1")) return u + "/chat/completions";
+  return u + "/v1/chat/completions";
+}
+
+function baseRules() {
+  return `
+固定前提：
+- “他们”“那几个”“体育生”“兄弟们”默认都指五个预设 Agent：周野、陈骁、林川、赵恺、阿航。
+- 不要询问“他们是现实熟人还是幻想角色”。这是本应用的虚构角色配置。
+- 用户是场景中心，不是旁观者。
+- 角色必须直接回应用户的需求和动作，禁止只互相打闹或无视用户。
+- 五个角色均为18岁成年人，关系基调是直男体育生兄弟感。
+`;
+}
+
+function guidePrompt(mode) {
+  if (mode === "config") {
+    return `
+你是场景入口的高级向导 Agent。根据对话生成或更新完整配置。
+语气平淡、礼貌、稳定，使用“您”。
+${baseRules()}
+
+只输出 JSON，不要 Markdown。
+字段：
+reply,title,scene,
+mode(safe/coarse/suggestive/intense),
+intensity(soft/medium/explicit),
+relationshipTone(brother/rough_bro/teasing/direct),
+atmosphere数组,
+participants数组(zhouye/chenxiao/linchuan/zhaokai/ahang),
+intro,
+scenePrompt,
+agentOverrides对象,
+quick数组,
+boundaries数组。
+
+scenePrompt 必须写明：
+- 用户是场景中心。
+- 角色要围绕用户主动行动。
+- 每轮至少两名角色直接回应用户。
+- 不能忽略用户。
+quick 必须使用英文半角括号动作格式。
+`;
+  }
+
+  return `
+你是场景入口的高级向导 Agent。
+你的工作是通过自然对话了解用户今天想要的状态、场景、氛围、角色参与、强度和边界。
+语气平淡、礼貌、稳定，必须使用“您”称呼用户。
+像私人服务人员，不撒娇，不卖萌，不乙游。
+${baseRules()}
+
+不要直接生成配置，除非用户明确要求生成。
+每次最多问1到2个关键问题。
+回复只输出普通文本。
+`;
+}
+
+async function llm(messages, model) {
+  const cfg = getConfig();
+  if (!cfg || !cfg.key) throw new Error("缺少 API 配置，请先从 AES 入口解锁。");
+
+  const res = await fetch(endpoint(cfg.endpoint), {
+    method: "POST",
+    headers: {
+      "Content-Type": "application/json",
+      Authorization: `Bearer ${cfg.key}`
+    },
+    body: JSON.stringify({
+      model: model || cfg.model || "deepseek-chat",
+      messages,
+      temperature: 0.75,
+      stream: false
+    })
+  });
+
+  const raw = await res.text();
+  let data = {};
+  try { data = JSON.parse(raw); } catch {}
+  if (!res.ok) throw new Error((data.error && data.error.message) || raw);
+  return data.choices[0].message.content.trim();
+}
+
+async function callGuide(mode, text) {
+  const context = guideMessages.map(m => ({
+    role: m.role === "guide" ? "assistant" : "user",
+    content: m.content
+  }));
+
+  const user = mode === "config"
+    ? `请根据以下对话生成完整配置。${plan ? "\n当前配置：" + JSON.stringify(plan) : ""}\n最新要求：${text || "生成配置"}`
+    : text;
+
+  return llm([{ role: "system", content: guidePrompt(mode) }, ...context, { role: "user", content: user }]);
+}
+
+function parseJson(text) {
+  const clean = String(text || "").replace(/^```json/i, "").replace(/```$/i, "").trim();
+  try { return JSON.parse(clean); } catch {}
+  const match = clean.match(/\{[\s\S]*\}/);
+  if (match) return JSON.parse(match[0]);
+  throw new Error("向导返回格式不对");
+}
+
+function ensureAction(x) {
+  const t = String(x || "").trim();
+  if (/^\(.+?\)/.test(t)) return t;
+  if (/^（.+?）/.test(t)) return t.replace(/^（(.+?)）/, "($1)");
+  return `(看过去)${t}`;
+}
+
+function fallback(text) {
+  const all = (text || "") + "\n" + guideMessages.map(m => m.content).join("\n");
+  const intense = /黄|成人|下流|直接|色色|做|亲密|更近|刺激/.test(all);
+
+  return {
+    reply: "配置已生成。请您确认以下内容；如果需要调整，可以继续在下方输入。",
+    title: "夜里宿舍",
+    scene: "宿舍",
+    mode: intense ? "intense" : "coarse",
+    intensity: intense ? "explicit" : "medium",
+    relationshipTone: "rough_bro",
+    atmosphere: ["夜晚", "直接", "粗粝", "低灯光"],
+    participants: ["zhouye", "chenxiao", "linchuan", "zhaokai", "ahang"],
+    intro: "宿舍灯光压得很低，几个人的注意力都落到您身上。周野先抬头，陈骁靠在床边笑，林川把手机扣到一旁，赵恺侧过身，阿航停下手里的动作等您开口。",
+    scenePrompt: "用户是场景中心。所有角色必须直接围绕用户的需求、动作和语气回应。至少两名角色主动对用户做出动作或台词，禁止只互相打闹或忽略用户。保持直男体育生兄弟关系基调。",
+    agentOverrides: {
+      zhouye: "主动推进，直接把注意力拉回用户身上",
+      chenxiao: "嘴欠起哄，但必须接用户的话",
+      linchuan: "话少行动派，直接回应用户动作",
+      zhaokai: "稳定提醒边界，照顾节奏",
+      ahang: "热闹带气氛，主动贴近对话"
+    },
+    quick: ["(坐到床边)看他们在干什么", "(靠着门)让他们别装", "(拿起水瓶)问今晚谁先来"],
+    boundaries: ["所有角色均为18岁成年人", "保持直男体育生兄弟关系基调", "您可以随时降级或退出"]
+  };
+}
+
+function normalize(p, text) {
+  const f = fallback(text);
+  const participants = Array.isArray(p.participants) ? p.participants.filter(id => agentNames[id]) : f.participants;
+  return {
+    reply: p.reply || f.reply,
+    title: p.title || p.scene || f.title,
+    scene: p.scene || p.title || f.scene,
+    mode: labels.mode[p.mode] ? p.mode : f.mode,
+    intensity: labels.intensity[p.intensity] ? p.intensity : f.intensity,
+    relationshipTone: labels.relationshipTone[p.relationshipTone] ? p.relationshipTone : f.relationshipTone,
+    atmosphere: Array.isArray(p.atmosphere) && p.atmosphere.length ? p.atmosphere.slice(0, 8) : f.atmosphere,
+    participants: participants.length ? participants : f.participants,
+    intro: p.intro || f.intro,
+    scenePrompt: (p.scenePrompt || p.systemPrompt || f.scenePrompt) + "\n强制：用户是场景中心，每轮至少两名角色直接回应用户，不能把用户晾在旁边。",
+    agentOverrides: { ...f.agentOverrides, ...(p.agentOverrides || {}) },
+    quick: Array.isArray(p.quick) && p.quick.length ? p.quick.map(ensureAction).slice(0, 5) : f.quick,
+    boundaries: Array.isArray(p.boundaries) && p.boundaries.length ? p.boundaries.slice(0, 8) : f.boundaries
+  };
+}
+
+function save() {
+  localStorage.setItem(CHAT_KEY, JSON.stringify(guideMessages));
+  if (plan) localStorage.setItem(CUSTOM_KEY, JSON.stringify(plan));
+  localStorage.setItem(SCENE_KEY, JSON.stringify(sceneMessages));
+}
+
+function addGuide(role, content) {
+  guideMessages.push({ role, content, ts: Date.now() });
+  save();
+  renderGuide();
+  setTimeout(() => window.scrollTo({ top: document.body.scrollHeight, behavior: "smooth" }), 50);
+}
+
+function renderGuide() {
+  $("#chat").innerHTML = guideMessages.map(m => `
+    <div class="msg ${m.role === "user" ? "user" : ""}">
+      ${m.role === "guide" ? '<div class="avatar">向</div>' : ""}
+      <div class="bubble">${esc(m.content)}</div>
+      ${m.role === "user" ? '<div class="avatar">我</div>' : ""}
+    </div>
+  `).join("");
+}
+
+function renderPlan() {
+  if (!plan) return;
+
+  $("#card").classList.remove("hide");
+  $("#card").innerHTML = `
+    <div class="card-head">
+      <div>
+        <h2>配置已生成</h2>
+        <p>进入场景后，角色会被强制围绕您的配置和动作回应。</p>
+      </div>
+      <button class="btn primary" data-enter>进入</button>
+    </div>
+    <div class="grid">
+      ${item("标题", plan.title)}
+      ${item("场景", plan.scene)}
+      ${item("内容模式", labels.mode[plan.mode] || plan.mode)}
+      ${item("强度", labels.intensity[plan.intensity] || plan.intensity)}
+      ${item("关系基调", labels.relationshipTone[plan.relationshipTone] || plan.relationshipTone)}
+      ${item("参与角色", plan.participants.map(id => agentNames[id]).join("、"))}
+      ${item("氛围标签", tags(plan.atmosphere), true)}
+      ${item("开场描写", plan.intro, true)}
+      ${item("场景规则", plan.scenePrompt, true)}
+      ${item("角色倾向", Object.entries(plan.agentOverrides || {}).map(([id, v]) => `${agentNames[id] || id}：${v}`).join("\n"), true)}
+      ${item("快捷行为", plan.quick.join("\n"), true)}
+      ${item("边界", plan.boundaries.join("\n"), true)}
+    </div>
+    <div class="actions"><button class="btn primary" data-enter>进入</button></div>
+  `;
+  document.querySelectorAll("[data-enter]").forEach(el => el.onclick = enterScene);
+  save();
+}
+
+function item(label, value, wide = false) {
+  return `<div class="item ${wide ? "wide" : ""}"><div class="label">${label}</div><div class="value">${value}</div></div>`;
+}
+function tags(arr) {
+  return `<div class="tags">${arr.map(x => `<span class="tag">${esc(x)}</span>`).join("")}</div>`;
+}
+
+async function submitGuide(text) {
+  if (!text.trim()) return;
+  addGuide("user", text.trim());
+  $("#form").classList.add("loading");
+
+  try {
+    if (plan) {
+      const raw = await callGuide("config", text.trim());
+      plan = normalize(parseJson(raw), text.trim());
+      addGuide("guide", plan.reply || "已按您的补充更新配置。");
+      renderPlan();
+    } else {
+      addGuide("guide", await callGuide("chat", text.trim()));
+    }
+  } catch (e) {
+    addGuide("guide", e.message || "处理失败。您可以再说一次，或者直接生成配置。");
+  }
+
+  $("#form").classList.remove("loading");
+}
+
+async function generateConfig() {
+  $("#generateBtn").classList.add("loading");
+  try {
+    const raw = await callGuide("config", "请基于目前对话生成配置。");
+    plan = normalize(parseJson(raw), "生成配置");
+    addGuide("guide", plan.reply || "配置已生成。请您确认。");
+    renderPlan();
+  } catch (e) {
+    plan = fallback("生成配置");
+    addGuide("guide", "我先为您生成一版基础配置。您可以继续对话修改。");
+    renderPlan();
+  }
+  $("#generateBtn").classList.remove("loading");
+}
+
+function sceneSystem() {
+  const p = plan || fallback("默认场景");
+  return `
+你是 Scene Agent。当前配置：
+${JSON.stringify(p)}
+
+${baseRules()}
+
+硬规则：
+1. 用户是场景中心，不是旁观者。
+2. 每次回复至少让2名参与角色直接回应用户刚才的话或动作。
+3. 角色可以互相起哄，但互相起哄必须服务于用户，不许只自顾自聊天。
+4. 输出格式必须是多行：名字：(动作)台词。可以加一行短场景描写。
+5. 动作必须用英文半角括号。
+6. 不替用户行动，不忽略用户，不把用户晾在旁边。
+7. 内容强度遵守配置 mode/intensity 和 boundaries。
+8. 保持直男体育生兄弟感，不乙游，不霸总。
+`;
+}
+
+async function sceneReply(userText) {
+  sceneMessages.push({ role: "user", content: userText, ts: Date.now() });
+  renderScene();
+  save();
+
+  $("#form").classList.add("loading");
+  try {
+    const msgs = sceneMessages.slice(-10).map(m => ({ role: m.role, content: m.content }));
+    const reply = await llm([{ role: "system", content: sceneSystem() }, ...msgs]);
+    sceneMessages.push({ role: "assistant", content: reply, ts: Date.now() });
+  } catch (e) {
+    sceneMessages.push({
+      role: "assistant",
+      content: "周野：(看过来)别站那儿，说清楚点。\n陈骁：(靠着床沿笑)你小子这话说一半，谁接得住啊。",
+      ts: Date.now()
+    });
+  }
+
+  $("#form").classList.remove("loading");
+  renderScene();
+  save();
+  setTimeout(() => window.scrollTo({ top: document.body.scrollHeight, behavior: "smooth" }), 50);
+}
+
+function renderScene() {
+  if (!plan) return;
+  $("#sceneLog").innerHTML = sceneMessages.map(m => `
+    <div class="line ${m.role === "user" ? "me" : ""}">
+      ${m.role === "assistant" ? '<div class="avatar">场</div>' : ""}
+      <div class="bubble">${esc(m.content)}</div>
+      ${m.role === "user" ? '<div class="avatar">我</div>' : ""}
+    </div>
+  `).join("");
+}
+
+function enterScene() {
+  if (!plan) plan = fallback("默认场景");
+  $("#guidePage").classList.add("hide");
+  $("#scenePage").classList.remove("hide");
+  $("#guideButtons").classList.add("hide");
+  $("#sceneButtons").classList.remove("hide");
+  $("#sceneTitle").textContent = plan.title || plan.scene;
+  $("#sceneSub").textContent = `${plan.scene} · ${labels.mode[plan.mode] || plan.mode} · ${labels.intensity[plan.intensity] || plan.intensity}`;
+  $("#sceneIntro").textContent = plan.intro;
+  sceneMessages = [];
+  renderScene();
+  save();
+}
+
+function backGuide() {
+  $("#scenePage").classList.add("hide");
+  $("#guidePage").classList.remove("hide");
+  $("#sceneButtons").classList.add("hide");
+  $("#guideButtons").classList.remove("hide");
+}
+
+function resetAll() {
+  guideMessages = [{
+    role: "guide",
+    content: "请先告诉我，您今晚想进入什么状态。默认“他们”就是周野、陈骁、林川、赵恺和阿航。我会先问几个必要问题，再为您生成配置。",
+    ts: Date.now()
+  }];
+  plan = null;
+  sceneMessages = [];
+  localStorage.removeItem(CUSTOM_KEY);
+  localStorage.removeItem(CHAT_KEY);
+  localStorage.removeItem(SCENE_KEY);
+  $("#card").classList.add("hide");
+  renderGuide();
+  save();
+}
+
+function init() {
+  try { guideMessages = JSON.parse(localStorage.getItem(CHAT_KEY) || "[]"); } catch {}
+  try { plan = JSON.parse(localStorage.getItem(CUSTOM_KEY) || "null"); } catch {}
+  try { sceneMessages = JSON.parse(localStorage.getItem(SCENE_KEY) || "[]"); } catch {}
+
+  if (!guideMessages.length) {
+    guideMessages = [{
+      role: "guide",
+      content: "请先告诉我，您今晚想进入什么状态。默认“他们”就是周野、陈骁、林川、赵恺和阿航。我会先问几个必要问题，再为您生成配置。",
+      ts: Date.now()
+    }];
+  }
+
+  renderGuide();
+  if (plan) renderPlan();
+
+  $("#form").onsubmit = e => {
+    e.preventDefault();
+    const text = $("#input").value;
+    $("#input").value = "";
+    if ($("#scenePage").classList.contains("hide")) submitGuide(text);
+    else sceneReply(text);
+  };
+
+  $("#generateBtn").onclick = generateConfig;
+  $("#resetBtn").onclick = resetAll;
+  $("#direct").onclick = () => { plan = fallback("默认场景"); enterScene(); };
+  $("#sceneStart").onclick = () => sceneReply("(看向他们)你们打算怎么安排？");
+  $("#backGuide").onclick = backGuide;
+  $("#backGuide2").onclick = backGuide;
+
+  document.querySelectorAll("[data-text]").forEach(btn => {
+    btn.onclick = () => submitGuide(btn.dataset.text);
+  });
+}
+
+init();
+</script>
+</body>
+</html>
