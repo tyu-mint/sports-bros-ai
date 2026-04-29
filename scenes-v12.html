@@ -329,6 +329,7 @@
         <button class="send">›</button>
       </form>
       <div id="guideButtons" class="composer-actions">
+        <button id="configProviderBtn" class="btn" type="button">配置模型提供商</button>
         <button id="generateBtn" class="btn primary" type="button">生成配置</button>
         <button id="resetBtn" class="btn" type="button">重新开始</button>
       </div>
@@ -340,7 +341,7 @@
   </div>
 
 <script>
-const CONFIG_KEY = "sports-bros-scene-config-v04";
+const CONFIG_KEY = "sports-bros-scene-config-v12";
 const CUSTOM_KEY = "sports-bros-scene-custom-v12-local";
 const CHAT_KEY = "sports-bros-guide-chat-v12-local";
 const SCENE_KEY = "sports-bros-scene-log-v12-local";
@@ -374,10 +375,44 @@ function esc(v) {
 
 function getConfig() {
   try {
-    return JSON.parse(localStorage.getItem(CONFIG_KEY) || localStorage.getItem("sports-bros-api-config") || "null");
+    return JSON.parse(localStorage.getItem(CONFIG_KEY) || "null");
   } catch {
     return null;
   }
+}
+
+
+function saveConfig(cfg) {
+  localStorage.setItem(CONFIG_KEY, JSON.stringify(cfg));
+}
+
+function askProviderConfig() {
+  const current = getConfig() || {};
+  const provider = prompt("请输入模型提供商（deepseek/openai/custom）", current.provider || "deepseek");
+  if (provider === null) return null;
+
+  const defaultEndpoint = provider.toLowerCase() === "openai"
+    ? "https://api.openai.com/v1"
+    : "https://api.deepseek.com";
+
+  const endpointInput = prompt("请输入 API Endpoint（可填域名或 /v1）", current.endpoint || defaultEndpoint);
+  if (endpointInput === null) return null;
+
+  const key = prompt("请输入 API Key", current.key || "");
+  if (key === null || !key.trim()) return null;
+
+  const defaultModel = provider.toLowerCase() === "openai" ? "gpt-4o-mini" : "deepseek-chat";
+  const model = prompt("请输入模型名", current.model || defaultModel);
+  if (model === null || !model.trim()) return null;
+
+  const cfg = {
+    provider: provider.trim().toLowerCase() || "custom",
+    endpoint: endpointInput.trim() || defaultEndpoint,
+    key: key.trim(),
+    model: model.trim()
+  };
+  saveConfig(cfg);
+  return cfg;
 }
 
 function endpoint(url) {
@@ -442,8 +477,11 @@ ${baseRules()}
 }
 
 async function llm(messages, model) {
-  const cfg = getConfig();
-  if (!cfg || !cfg.key) throw new Error("缺少 API 配置，请先从 AES 入口解锁。");
+  let cfg = getConfig();
+  if (!cfg || !cfg.key) {
+    cfg = askProviderConfig();
+  }
+  if (!cfg || !cfg.key) throw new Error("缺少 API 配置，请先单独配置模型提供商。");
 
   const res = await fetch(endpoint(cfg.endpoint), {
     method: "POST",
@@ -755,6 +793,10 @@ function init() {
     else sceneReply(text);
   };
 
+  $("#configProviderBtn").onclick = () => {
+    const cfg = askProviderConfig();
+    if (cfg) addGuide("guide", `已保存提供商配置：${cfg.provider} / ${cfg.model}`);
+  };
   $("#generateBtn").onclick = generateConfig;
   $("#resetBtn").onclick = resetAll;
   $("#direct").onclick = () => { plan = fallback("默认场景"); enterScene(); };
